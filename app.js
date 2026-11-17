@@ -24,8 +24,8 @@ const DOCUMENT_EXTENSIONS = ['doc', 'docx', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx']
 const OFFICE_EXTENSIONS = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
 const VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'avi', 'mkv'];
 
-const MAX_DOCUMENT_BYTES = 25 * 1024 * 1024; // 25 MB
-const MAX_VIDEO_BYTES = 150 * 1024 * 1024; // 150 MB
+const MAX_DOCUMENT_BYTES = 500 * 1024 * 1024; // 500 MB
+const MAX_VIDEO_BYTES = 2048 * 1024 * 1024; // 2048 MB (2 GB)
 
 /**
  * Mapa de migración automática de anexos con letras (A-L) a numeración (1-13)

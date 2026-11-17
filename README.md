@@ -36,7 +36,7 @@ El proyecto está separado en tres archivos principales sin dependencias de fram
 
 ## Los 13 Anexos Numerados y Tipos de Archivo
 
-- **Anexos 1 a 12** (documentos `.doc`, `.docx`, `.pdf`, hojas de cálculo `.xls`, `.xlsx` y presentaciones `.ppt`, `.pptx`, hasta 25 MB):
+- **Anexos 1 a 12** (documentos `.doc`, `.docx`, `.pdf`, hojas de cálculo `.xls`, `.xlsx` y presentaciones `.ppt`, `.pptx`, hasta 500 MB):
   - **Anexo 1.** Planeación de actividades
   - **Anexo 2.** Diagramas de casos de uso
   - **Anexo 3.** Diagramas de actividad
@@ -49,7 +49,7 @@ El proyecto está separado en tres archivos principales sin dependencias de fram
   - **Anexo 10.** Software
   - **Anexo 11.** Recursos humanos
   - **Anexo 12.** Portafolio de evidencias
-- **Anexo 13 (`Anexo 13. Anexos Html`)**: acepta **únicamente un archivo de video** (`.mp4`, `.webm`, `.ogg`, `.mov`, `.m4v`, hasta 150 MB) y se reproduce con `<video controls>` y selector de velocidad.
+- **Anexo 13 (`Anexo 13. Anexos Html`)**: acepta **únicamente un archivo de video** (`.mp4`, `.webm`, `.ogg`, `.mov`, `.m4v`, hasta 2 GB) y se reproduce con `<video controls>` y selector de velocidad.
 
 ---
 
