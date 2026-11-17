@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
+import './app.js';
+
+const {
   DEFAULT_ANNEXES,
   MAX_DOCUMENT_BYTES,
   MAX_VIDEO_BYTES,
@@ -13,7 +15,7 @@ import {
   mergeAnnexesWithStorage,
   savePersistedMap,
   validateFileForAnnex,
-} from './app.js';
+} = (globalThis as any).ADSO_PORTFOLIO;
 
 test('DEFAULT_ANNEXES defines exactly 12 annexes with exact titles and rules', () => {
   assert.equal(DEFAULT_ANNEXES.length, 12);

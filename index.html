@@ -3,19 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Portafolio de Evidencias ADSO — ÉCHELE CAMELLO | SENA</title>
+    <title>Portafolio de Evidencias ADSO — Grupo 8 · ÉCHELE CAMELLO | SENA</title>
     <meta
       name="description"
-      content="Portafolio de Evidencias del programa Análisis y Desarrollo de Software (ADSO) del SENA — Proyecto Échele Camello, Neiva/Huila."
+      content="Portafolio de Evidencias interactivo del programa Análisis y Desarrollo de Software (ADSO) del SENA — Grupo 8 · Proyecto Échele Camello, Neiva/Huila."
     />
-    <meta property="og:title" content="Portafolio de Evidencias ADSO — ÉCHELE CAMELLO | SENA" />
+    <meta property="og:title" content="Portafolio de Evidencias ADSO — Grupo 8 · ÉCHELE CAMELLO | SENA" />
     <meta
       property="og:description"
-      content="Portafolio de evidencias interactivo con carga, previsualización y descarga de los 12 anexos del proyecto ADSO."
+      content="Portafolio de evidencias interactivo con carga, previsualización y descarga de los 12 anexos del proyecto ADSO — Grupo 8."
     />
     <meta property="og:type" content="website" />
 
-    <!-- Fuentes tipográficas externas (Google Fonts con respaldo local) -->
+    <!-- Fuentes tipográficas externas indicadas explícitamente (Google Fonts con respaldo del sistema) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -23,36 +23,45 @@
       rel="stylesheet"
     />
 
-    <!-- Hoja de estilos principal (sin frameworks) -->
+    <!-- Hoja de estilos principal (CSS3 puro sin frameworks) -->
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <!-- Marca de agua institucional global del SENA sobre fondo blanco -->
+    <div class="sena-watermark sena-watermark--fixed" aria-hidden="true">
+      <svg viewBox="0 0 260 280" fill="none" xmlns="http://www.w3.org/2000/svg" class="sena-watermark__svg">
+        <text
+          x="130"
+          y="46"
+          text-anchor="middle"
+          font-family="'Plus Jakarta Sans', Arial, sans-serif"
+          font-size="38"
+          font-weight="800"
+          letter-spacing="8"
+          fill="currentColor"
+        >
+          SENA
+        </text>
+        <circle cx="130" cy="92" r="22" fill="currentColor" />
+        <path
+          d="M36 122H112L66 204L44 190L76 138H36V122Z"
+          fill="currentColor"
+        />
+        <path
+          d="M224 122H148L194 204L216 190L184 138H224V122Z"
+          fill="currentColor"
+        />
+        <path
+          d="M130 142L84 224L104 236L130 190L156 236L176 224L130 142Z"
+          fill="currentColor"
+        />
+      </svg>
+    </div>
+
     <!-- =================================================================== -->
     <!-- PANTALLA 1: PORTADA INSTITUCIONAL                                   -->
     <!-- =================================================================== -->
-    <section id="cover-screen" class="cover-screen" aria-labelledby="cover-project-title">
-      <!-- Marca de agua institucional del SENA sobre fondo blanco -->
-      <div class="sena-watermark" aria-hidden="true">
-        <svg viewBox="0 0 240 250" fill="none" xmlns="http://www.w3.org/2000/svg" class="sena-watermark__svg">
-          <circle cx="120" cy="48" r="21" fill="currentColor" />
-          <path
-            d="M42 74C52 67 66 72 74 82L108 118H132L166 82C174 72 188 67 198 74C204 79 203 91 193 102L144 151V208C144 216 137 222 129 222H111C103 222 96 216 96 208V151L47 102C37 91 36 79 42 74Z"
-            fill="currentColor"
-          />
-          <text
-            x="120"
-            y="244"
-            text-anchor="middle"
-            font-family="'Plus Jakarta Sans', sans-serif"
-            font-size="22"
-            font-weight="800"
-            letter-spacing="6"
-            fill="currentColor"
-          >
-            SENA
-          </text>
-        </svg>
-      </div>
+    <section id="cover-screen" class="cover-screen is-entering" aria-labelledby="cover-project-title">
       <div class="cover-card">
         <div class="cover-emblem" aria-hidden="true">
           <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="44" height="44">
@@ -69,6 +78,10 @@
         <h1 id="cover-project-title" class="cover-title">ÉCHELE CAMELLO</h1>
 
         <p class="cover-subtitle">Portafolio de Evidencias</p>
+
+        <div class="cover-group-badge" aria-label="Grupo del proyecto">
+          <span>Grupo 8</span>
+        </div>
 
         <div class="cover-divider" role="presentation"></div>
 
@@ -121,6 +134,7 @@
           </button>
           <span class="top-bar__sep" aria-hidden="true">/</span>
           <span class="top-bar__title">ÉCHELE CAMELLO</span>
+          <span class="top-bar__group-pill">Grupo 8</span>
         </div>
 
         <nav class="top-bar__info" aria-label="Información del programa">
@@ -139,9 +153,9 @@
       </header>
 
       <!-- Espacio de trabajo principal:
-           1. Área de previsualización (espacio restante a la izquierda)
-           2. Panel desplegable de información y carga (se abre hacia la izquierda del botón)
-           3. Columna de 12 botones azul oscuro a la derecha -->
+           1. Área de previsualización (espacio restante)
+           2. Panel desplegable hacia la izquierda de los botones
+           3. Columna derecha de 12 botones desplegables en azul oscuro -->
       <main class="workspace">
         <!-- 1. ÁREA DE PREVISUALIZACIÓN -->
         <section class="preview-stage" aria-labelledby="preview-heading">
@@ -153,18 +167,18 @@
 
             <div class="preview-stage__toolbar">
               <div id="zoom-controls" class="zoom-controls" hidden>
-                <button id="zoom-out-btn" type="button" class="btn-icon" aria-label="Reducir zoom">
+                <button id="zoom-out-btn" type="button" class="btn-icon" aria-label="Reducir zoom" title="Alejar">
                   <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
                     <path d="M5 10h10" stroke-linecap="round" />
                   </svg>
                 </button>
                 <span id="zoom-level-label" class="zoom-level tabular-nums">100%</span>
-                <button id="zoom-in-btn" type="button" class="btn-icon" aria-label="Aumentar zoom">
+                <button id="zoom-in-btn" type="button" class="btn-icon" aria-label="Aumentar zoom" title="Acercar">
                   <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
                     <path d="M10 5v10M5 10h10" stroke-linecap="round" />
                   </svg>
                 </button>
-                <button id="zoom-reset-btn" type="button" class="btn-ghost-xs">Ajustar</button>
+                <button id="zoom-reset-btn" type="button" class="btn-ghost-xs">100%</button>
               </div>
 
               <button
@@ -179,6 +193,20 @@
                 </svg>
                 <span id="toggle-drawer-label">Ocultar panel</span>
               </button>
+
+              <a
+                id="preview-open-tab-link"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn-outline-sm"
+                hidden
+              >
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15" aria-hidden="true">
+                  <path d="M11 4h5v5M16 4l-7 7M8 6H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-3" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span>Abrir pestaña</span>
+              </a>
 
               <a
                 id="preview-download-link"
@@ -198,26 +226,35 @@
           <div id="preview-viewport" class="preview-viewport" tabindex="0">
             <!-- Marca de agua institucional del SENA centrada en el área de previsualización -->
             <div class="sena-watermark sena-watermark--stage" aria-hidden="true">
-              <svg viewBox="0 0 240 250" fill="none" xmlns="http://www.w3.org/2000/svg" class="sena-watermark__svg">
-                <circle cx="120" cy="48" r="21" fill="currentColor" />
-                <path
-                  d="M42 74C52 67 66 72 74 82L108 118H132L166 82C174 72 188 67 198 74C204 79 203 91 193 102L144 151V208C144 216 137 222 129 222H111C103 222 96 216 96 208V151L47 102C37 91 36 79 42 74Z"
-                  fill="currentColor"
-                />
+              <svg viewBox="0 0 260 280" fill="none" xmlns="http://www.w3.org/2000/svg" class="sena-watermark__svg">
                 <text
-                  x="120"
-                  y="244"
+                  x="130"
+                  y="46"
                   text-anchor="middle"
-                  font-family="'Plus Jakarta Sans', sans-serif"
-                  font-size="22"
+                  font-family="'Plus Jakarta Sans', Arial, sans-serif"
+                  font-size="38"
                   font-weight="800"
-                  letter-spacing="6"
+                  letter-spacing="8"
                   fill="currentColor"
                 >
                   SENA
                 </text>
+                <circle cx="130" cy="92" r="22" fill="currentColor" />
+                <path
+                  d="M36 122H112L66 204L44 190L76 138H36V122Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M224 122H148L194 204L216 190L184 138H224V122Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M130 142L84 224L104 236L130 190L156 236L176 224L130 142Z"
+                  fill="currentColor"
+                />
               </svg>
             </div>
+
             <!-- Estado vacío cuando el anexo no tiene archivo -->
             <div id="preview-empty" class="preview-empty">
               <div class="preview-empty__icon" aria-hidden="true">
@@ -229,8 +266,13 @@
               </div>
               <h3 class="preview-empty__title">Sin archivo adjunto en este anexo</h3>
               <p id="preview-empty-hint" class="preview-empty__desc">
-                Carga un documento (.pdf, .doc, .docx, .xls, .xlsx, .ppt o .pptx) desde el panel lateral para previsualizarlo y descargarlo aquí.
+                Pulsa un botón de anexo a la derecha para desplegar su panel y cargar un documento (.pdf, .doc, .docx, .xls, .xlsx, .ppt o .pptx) para previsualizarlo y descargarlo aquí.
               </p>
+              <div class="preview-empty__actions">
+                <button id="empty-upload-trigger-btn" type="button" class="btn-navy-sm">
+                  Seleccionar archivo para este anexo
+                </button>
+              </div>
             </div>
 
             <!-- Contenedor activo de previsualización (PDF, Office o Video) -->
@@ -239,7 +281,7 @@
 
           <footer class="preview-stage__footer">
             <p class="session-note">
-              <strong>Nota de sesión:</strong> Los nombres editados se conservan en <code>localStorage</code>. Los archivos adjuntos permanecen activos durante la sesión mediante <code>URL.createObjectURL()</code>; para persistencia binaria tras recargar la página se requeriría <code>IndexedDB</code>.
+              <strong>Nota técnica:</strong> Los nombres y descripciones se guardan en <code>localStorage</code>. Los archivos cargados usan <code>URL.createObjectURL()</code> para previsualización inmediata en la sesión y se respaldan automáticamente en <code>IndexedDB</code> del navegador local.
             </p>
           </footer>
         </section>
@@ -250,7 +292,7 @@
           class="annex-drawer"
           aria-label="Detalle y carga del anexo seleccionado"
         >
-          <div class="annex-drawer__inner">
+          <div id="annex-drawer-inner" class="annex-drawer__inner">
             <div class="annex-drawer__header">
               <div>
                 <span id="drawer-code-label" class="drawer-code">ANEXO A · DOCUMENTOS</span>
@@ -260,17 +302,18 @@
                 id="close-drawer-btn"
                 type="button"
                 class="btn-icon"
-                aria-label="Cerrar panel de detalle del anexo"
+                aria-label="Replegar panel del anexo"
+                title="Replegar panel"
               >
                 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
-                  <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
+                  <path d="M7 5l5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               </button>
             </div>
 
             <!-- Nombre editable persistente -->
             <div class="field-group">
-              <label for="annex-title-input" class="field-label">Nombre del anexo (editable)</label>
+              <label for="annex-title-input" class="field-label">Nombre del botón / anexo (editable)</label>
               <div class="title-edit-row">
                 <input
                   id="annex-title-input"
@@ -328,6 +371,7 @@
                 </div>
                 <div class="attached-card__actions">
                   <button id="replace-file-btn" type="button" class="btn-outline-sm">Reemplazar</button>
+                  <a id="drawer-download-link" href="#" download class="btn-outline-sm">Descargar</a>
                   <button id="delete-file-btn" type="button" class="btn-danger-sm">Eliminar</button>
                 </div>
               </div>
@@ -335,7 +379,7 @@
 
             <!-- Opción adicional para previsualizar Office desde URL pública (Office Online / Google Docs) -->
             <div id="public-url-box" class="field-group public-url-box">
-              <label for="public-url-input" class="field-label">URL pública opcional (para visor Office Online / Google Docs)</label>
+              <label for="public-url-input" class="field-label">URL pública opcional (Visor Office Online / Google Docs)</label>
               <div class="title-edit-row">
                 <input
                   id="public-url-input"
@@ -344,19 +388,22 @@
                   placeholder="https://ejemplo.com/archivo.docx"
                   autocomplete="off"
                 />
-                <button id="apply-public-url-btn" type="button" class="btn-outline-sm">Cargar URL</button>
+                <button id="apply-public-url-btn" type="button" class="btn-outline-sm">Vincular</button>
               </div>
               <p class="field-hint">
-                Los archivos locales usan <code>blob:</code> y no son accesibles por visores externos; pega una URL pública HTTPS si deseas usar Microsoft Office Online o Google Docs Viewer.
+                Los archivos locales (.docx, .xlsx, .pptx) se previsualizan directamente aquí. Si además deseas abrirlos con Microsoft Office Online o Google Docs Viewer, pega su URL pública HTTPS.
               </p>
             </div>
           </div>
         </aside>
 
-        <!-- 3. COLUMNA DERECHA DE 12 BOTONES AZUL OSCURO -->
+        <!-- 3. COLUMNA DERECHA DE 12 BOTONES AZUL OSCURO DESPLEGABLES -->
         <nav class="annex-rail" aria-label="Navegación de los 12 anexos">
           <div class="annex-rail__header">
-            <h2 class="annex-rail__heading">Anexos del Portafolio</h2>
+            <div>
+              <h2 class="annex-rail__heading">Anexos del Portafolio</h2>
+              <p class="annex-rail__subhint">Pulsa un botón para desplegar hacia la izquierda</p>
+            </div>
             <span class="annex-rail__count tabular-nums">12 evidencias</span>
           </div>
           <ul id="annex-buttons-list" class="annex-rail__list">
@@ -366,7 +413,7 @@
       </main>
     </div>
 
-    <!-- Script principal en JavaScript puro (ES Module) -->
-    <script type="module" src="./app.js"></script>
+    <!-- Script principal en JavaScript puro (funciona tanto en servidor web como abriendo index.html localmente) -->
+    <script src="./app.js" defer></script>
   </body>
 </html>
