@@ -579,26 +579,123 @@ async function extractZipEntries(file) {
   return entries;
 }
 
-async function readZipEntryText(entries, entryPath) {
+async function readZipEntryBytes(entries, entryPath) {
   const entry = entries.get(entryPath);
   if (!entry) return null;
-  const decoder = new TextDecoder('utf-8');
 
   if (entry.compression === 0) {
-    return decoder.decode(entry.compressedData);
+    return entry.compressedData;
   }
 
   if (entry.compression === 8 && typeof DecompressionStream !== 'undefined') {
-    const ds = new DecompressionStream('deflate-raw');
-    const writer = ds.writable.getWriter();
-    writer.write(entry.compressedData);
-    writer.close();
-    const response = new Response(ds.readable);
-    const arrayBuffer = await response.arrayBuffer();
-    return decoder.decode(arrayBuffer);
+    try {
+      const stream = new Blob([entry.compressedData])
+        .stream()
+        .pipeThrough(new DecompressionStream('deflate-raw'));
+      const arrayBuffer = await new Response(stream).arrayBuffer();
+      return new Uint8Array(arrayBuffer);
+    } catch {
+      return null;
+    }
   }
 
   return null;
+}
+
+async function readZipEntryText(entries, entryPath) {
+  const bytes = await readZipEntryBytes(entries, entryPath);
+  if (!bytes) return null;
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+function getMediaMimeType(entryPath) {
+  const ext = getFileExtension(entryPath);
+  const mimeMap = {
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    gif: 'image/gif',
+    webp: 'image/webp',
+    svg: 'image/svg+xml',
+    bmp: 'image/bmp',
+    tif: 'image/tiff',
+    tiff: 'image/tiff',
+  };
+  return mimeMap[ext] || '';
+}
+
+function resolveZipRelTarget(baseFolder, target) {
+  if (typeof target !== 'string' || !target.trim()) return '';
+  const clean = target.trim().replace(/\\/g, '/');
+  if (clean.startsWith('/')) return clean.slice(1);
+  if (clean.startsWith('../')) {
+    return clean.replace(/^(\.\.\/)+/, '');
+  }
+  if (baseFolder && !clean.startsWith(`${baseFolder}/`)) {
+    return `${baseFolder}/${clean}`;
+  }
+  return clean;
+}
+
+async function buildOfficeMediaMap(entries, prefix) {
+  const mediaUrls = new Map();
+  for (const key of entries.keys()) {
+    if (!key.toLowerCase().startsWith(prefix.toLowerCase())) continue;
+    const mime = getMediaMimeType(key);
+    if (!mime) continue;
+    const bytes = await readZipEntryBytes(entries, key);
+    if (bytes && bytes.byteLength > 0) {
+      const blob = new Blob([bytes], { type: mime });
+      mediaUrls.set(key, URL.createObjectURL(blob));
+    }
+  }
+  return mediaUrls;
+}
+
+async function parseOfficeRels(entries, relsPath, baseFolder, parser) {
+  const relMap = new Map();
+  const relsXml = await readZipEntryText(entries, relsPath);
+  if (!relsXml) return relMap;
+  const relsDoc = parser.parseFromString(relsXml, 'application/xml');
+  Array.from(relsDoc.getElementsByTagName('Relationship')).forEach((rel) => {
+    const id = rel.getAttribute('Id');
+    const target = rel.getAttribute('Target');
+    if (id && target) {
+      relMap.set(id, resolveZipRelTarget(baseFolder, target));
+    }
+  });
+  return relMap;
+}
+
+function findReferencedMediaPaths(xmlNode, relMap, mediaUrls) {
+  const found = [];
+  if (!xmlNode || !xmlNode.getElementsByTagName) return found;
+  const elements = [xmlNode, ...Array.from(xmlNode.getElementsByTagName('*'))];
+  elements.forEach((el) => {
+    if (!el.attributes) return;
+    for (let i = 0; i < el.attributes.length; i++) {
+      const val = el.attributes[i].value;
+      if (relMap.has(val)) {
+        const targetPath = relMap.get(val);
+        if (mediaUrls.has(targetPath) && !found.includes(targetPath)) {
+          found.push(targetPath);
+        }
+      }
+    }
+  });
+  return found;
+}
+
+function createEmbeddedImageFigure(blobUrl, captionText) {
+  const figure = document.createElement('figure');
+  figure.className = 'office-doc-figure';
+  const img = document.createElement('img');
+  img.className = 'office-embedded-image';
+  img.src = blobUrl;
+  img.alt = captionText || 'Imagen integrada en el documento';
+  img.decoding = 'async';
+  figure.appendChild(img);
+  return figure;
 }
 
 async function renderLocalOfficePreview(file, ext, container) {
@@ -612,12 +709,28 @@ async function renderLocalOfficePreview(file, ext, container) {
       const xmlText = await readZipEntryText(entries, 'word/document.xml');
       if (!xmlText) throw new Error('No se encontró word/document.xml');
       const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
+      const mediaUrls = await buildOfficeMediaMap(entries, 'word/media/');
+      const relMap = await parseOfficeRels(entries, 'word/_rels/document.xml.rels', 'word', parser);
+      const renderedMedia = new Set();
+
       const sheet = document.createElement('div');
       sheet.className = 'office-doc-sheet';
 
       const bodyNode = xmlDoc.getElementsByTagName('w:body')[0] || xmlDoc.documentElement;
       const children = Array.from(bodyNode.children || []);
       let hasContent = false;
+
+      const appendImagesFromNode = (node, targetContainer) => {
+        const mediaPaths = findReferencedMediaPaths(node, relMap, mediaUrls);
+        mediaPaths.forEach((mPath) => {
+          const url = mediaUrls.get(mPath);
+          if (url) {
+            targetContainer.appendChild(createEmbeddedImageFigure(url, file.name));
+            renderedMedia.add(mPath);
+            hasContent = true;
+          }
+        });
+      };
 
       children.forEach((node) => {
         if (node.tagName === 'w:p') {
@@ -631,6 +744,7 @@ async function renderLocalOfficePreview(file, ext, container) {
             el.textContent = line;
             sheet.appendChild(el);
           }
+          appendImagesFromNode(node, sheet);
         } else if (node.tagName === 'w:tbl') {
           const tableWrap = document.createElement('div');
           tableWrap.className = 'office-table-wrap';
@@ -644,6 +758,7 @@ async function renderLocalOfficePreview(file, ext, container) {
               const cellEl = document.createElement(rIdx === 0 ? 'th' : 'td');
               const cellTexts = Array.from(cell.getElementsByTagName('w:t')).map((t) => t.textContent || '');
               cellEl.textContent = cellTexts.join(' ').trim();
+              appendImagesFromNode(cell, cellEl);
               tr.appendChild(cellEl);
             });
             table.appendChild(tr);
@@ -651,12 +766,23 @@ async function renderLocalOfficePreview(file, ext, container) {
           tableWrap.appendChild(table);
           sheet.appendChild(tableWrap);
           hasContent = true;
+        } else {
+          appendImagesFromNode(node, sheet);
+        }
+      });
+
+      // Mostrar cualquier imagen en word/media/ que no haya sido referenciada directamente en un párrafo estándar
+      mediaUrls.forEach((url, mPath) => {
+        if (!renderedMedia.has(mPath)) {
+          sheet.appendChild(createEmbeddedImageFigure(url, file.name));
+          renderedMedia.add(mPath);
+          hasContent = true;
         }
       });
 
       if (!hasContent) {
         const fallback = document.createElement('p');
-        fallback.textContent = 'Documento Word cargado correctamente (sin párrafos de texto plano detectados).';
+        fallback.textContent = 'Documento Word cargado correctamente (sin contenido de texto o imagen detectado).';
         sheet.appendChild(fallback);
       }
 
@@ -755,11 +881,16 @@ async function renderLocalOfficePreview(file, ext, container) {
 
       if (slideKeys.length === 0) throw new Error('No se encontraron diapositivas');
 
+      const pptMediaUrls = await buildOfficeMediaMap(entries, 'ppt/media/');
       const grid = document.createElement('div');
       grid.className = 'office-slides-grid';
 
       for (let i = 0; i < slideKeys.length; i++) {
-        const slideXml = await readZipEntryText(entries, slideKeys[i]);
+        const slideKey = slideKeys[i];
+        const slideFileName = slideKey.split('/').pop();
+        const slideRelsPath = `ppt/slides/_rels/${slideFileName}.rels`;
+        const slideRelMap = await parseOfficeRels(entries, slideRelsPath, 'ppt', parser);
+        const slideXml = await readZipEntryText(entries, slideKey);
         if (!slideXml) continue;
         const sDoc = parser.parseFromString(slideXml, 'application/xml');
         const paragraphs = Array.from(sDoc.getElementsByTagName('a:p'))
@@ -771,6 +902,8 @@ async function renderLocalOfficePreview(file, ext, container) {
           )
           .filter(Boolean);
 
+        const slideImages = findReferencedMediaPaths(sDoc.documentElement, slideRelMap, pptMediaUrls);
+
         const card = document.createElement('article');
         card.className = 'office-slide-card';
 
@@ -781,17 +914,24 @@ async function renderLocalOfficePreview(file, ext, container) {
         const body = document.createElement('div');
         body.className = 'office-slide-card__body';
 
-        if (paragraphs.length === 0) {
+        paragraphs.forEach((line, lIdx) => {
+          const p = document.createElement('p');
+          if (lIdx === 0) p.style.fontWeight = '700';
+          p.textContent = line;
+          body.appendChild(p);
+        });
+
+        slideImages.forEach((mPath) => {
+          const url = pptMediaUrls.get(mPath);
+          if (url) {
+            body.appendChild(createEmbeddedImageFigure(url, `Diapositiva ${i + 1}`));
+          }
+        });
+
+        if (paragraphs.length === 0 && slideImages.length === 0) {
           const p = document.createElement('p');
           p.textContent = '(Diapositiva visual / gráfica)';
           body.appendChild(p);
-        } else {
-          paragraphs.forEach((line, lIdx) => {
-            const p = document.createElement('p');
-            if (lIdx === 0) p.style.fontWeight = '700';
-            p.textContent = line;
-            body.appendChild(p);
-          });
         }
 
         card.appendChild(badge);

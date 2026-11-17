@@ -1350,6 +1350,22 @@ body {
   font-size: 0.94rem;
 }
 
+.office-doc-figure {
+  margin: 16px 0;
+  text-align: center;
+}
+
+.office-embedded-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+  background-color: #ffffff;
+  box-shadow: var(--shadow-subtle);
+}
+
 .office-table-wrap {
   width: 100%;
   overflow-x: auto;
