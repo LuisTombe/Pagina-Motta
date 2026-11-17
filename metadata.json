@@ -1,0 +1,6 @@
+{
+  "name": "Portafolio de Evidencias ADSO — Échele Camello",
+  "description": "Portafolio de evidencias interactivo para el programa Análisis y Desarrollo de Software (ADSO) del SENA — Proyecto Échele Camello.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
