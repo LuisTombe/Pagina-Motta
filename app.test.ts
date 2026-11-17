@@ -147,3 +147,11 @@ test('imagenes (diagramas): se aceptan en los anexos 1-12, se previsualizan como
   assert.equal(getPreviewCategory('svg'), 'image');
   assert.equal(getPreviewCategory('pdf'), 'pdf');
 });
+
+test('excel: colIndexToLetter genera referencias de columna correctas', () => {
+  const { colIndexToLetter } = (globalThis as any).ADSO_PORTFOLIO;
+  assert.equal(colIndexToLetter(0), 'A');
+  assert.equal(colIndexToLetter(25), 'Z');
+  assert.equal(colIndexToLetter(26), 'AA');
+  assert.equal(colIndexToLetter(27), 'AB');
+});

@@ -562,7 +562,8 @@ async function extractZipEntries(file) {
     const localHeaderOffset = view.getUint32(cdOffset + 42, true);
 
     const nameBytes = bytes.subarray(cdOffset + 46, cdOffset + 46 + fileNameLen);
-    const entryName = decoder.decode(nameBytes);
+    const rawEntryName = decoder.decode(nameBytes);
+    const entryName = rawEntryName.replace(/\\/g, '/').replace(/^\/+/, '');
 
     if (localHeaderOffset + 30 <= bytes.length && view.getUint32(localHeaderOffset, true) === 0x04034b50) {
       const localNameLen = view.getUint16(localHeaderOffset + 26, true);
@@ -580,11 +581,25 @@ async function extractZipEntries(file) {
 }
 
 async function readZipEntryBytes(entries, entryPath) {
-  const entry = entries.get(entryPath);
+  const normalizedPath = String(entryPath || '').replace(/\\/g, '/').replace(/^\/+/, '');
+  let entry = entries.get(normalizedPath);
+  if (!entry) {
+    const lowerTarget = normalizedPath.toLowerCase();
+    for (const [k, v] of entries.entries()) {
+      if (k.toLowerCase() === lowerTarget) {
+        entry = v;
+        break;
+      }
+    }
+  }
   if (!entry) return null;
 
   if (entry.compression === 0) {
     return entry.compressedData;
+  }
+
+  if (entry.compressedData.byteLength === 0) {
+    return new Uint8Array(0);
   }
 
   if (entry.compression === 8 && typeof DecompressionStream !== 'undefined') {
@@ -698,11 +713,233 @@ function createEmbeddedImageFigure(blobUrl, captionText) {
   return figure;
 }
 
+/* --------------------------------------------------------------------------
+   Utilidades de lectura para hojas de cálculo Excel (.xlsx)
+   -------------------------------------------------------------------------- */
+
+function colIndexToLetter(index) {
+  let col = Number(index);
+  let label = '';
+  while (col >= 0) {
+    label = String.fromCharCode((col % 26) + 65) + label;
+    col = Math.floor(col / 26) - 1;
+  }
+  return label;
+}
+
+function letterToColIndex(letters) {
+  let col = 0;
+  const upper = String(letters || '').toUpperCase();
+  for (let i = 0; i < upper.length; i++) {
+    col = col * 26 + (upper.charCodeAt(i) - 64);
+  }
+  return col - 1;
+}
+
+function parseCellReference(ref, fallbackRow, fallbackCol) {
+  if (typeof ref === 'string') {
+    const match = /^([A-Z]+)(\d+)$/i.exec(ref.trim());
+    if (match) {
+      return {
+        row: Number(match[2]) - 1,
+        col: letterToColIndex(match[1]),
+      };
+    }
+  }
+  return { row: fallbackRow, col: fallbackCol };
+}
+
+function normalizeArgbToCss(rgbAttr) {
+  if (typeof rgbAttr !== 'string') return '';
+  const clean = rgbAttr.trim().replace(/^#/, '');
+  if (clean.length === 8) {
+    if (clean.toUpperCase().startsWith('00')) return '';
+    return `#${clean.slice(2)}`;
+  }
+  if (clean.length === 6) {
+    return `#${clean}`;
+  }
+  return '';
+}
+
+function formatExcelSerialDate(serial) {
+  const num = Number(serial);
+  if (!Number.isFinite(num) || num <= 0) return String(serial);
+  const utcDays = Math.floor(num - 25569);
+  const date = new Date(utcDays * 86400 * 1000);
+  if (Number.isNaN(date.getTime())) return String(serial);
+  const d = String(date.getUTCDate()).padStart(2, '0');
+  const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const y = date.getUTCFullYear();
+  return `${d}/${m}/${y}`;
+}
+
+function parseExcelStyles(stylesXml, parser) {
+  if (!stylesXml) return [];
+  const doc = parser.parseFromString(stylesXml, 'application/xml');
+
+  const fonts = Array.from(doc.querySelectorAll('fonts > font')).map((fontEl) => {
+    const bold = Boolean(fontEl.getElementsByTagName('b')[0]);
+    const italic = Boolean(fontEl.getElementsByTagName('i')[0]);
+    const colorEl = fontEl.getElementsByTagName('color')[0];
+    const rgb = colorEl ? normalizeArgbToCss(colorEl.getAttribute('rgb')) : '';
+    const textColor = rgb && rgb.toUpperCase() !== '#000000' ? rgb : '';
+    return { bold, italic, textColor };
+  });
+
+  const fills = Array.from(doc.querySelectorAll('fills > fill')).map((fillEl) => {
+    const pattern = fillEl.getElementsByTagName('patternFill')[0];
+    if (!pattern) return '';
+    const patternType = pattern.getAttribute('patternType') || '';
+    if (patternType === 'none' || patternType === 'gray125') return '';
+    const fg = pattern.getElementsByTagName('fgColor')[0];
+    const bgColor = fg ? normalizeArgbToCss(fg.getAttribute('rgb')) : '';
+    if (!bgColor || bgColor.toUpperCase() === '#FFFFFF' || bgColor.toUpperCase() === '#000000') return '';
+    return bgColor;
+  });
+
+  const xfs = Array.from(doc.querySelectorAll('cellXfs > xf')).map((xf) => {
+    const fontId = Number(xf.getAttribute('fontId') || 0);
+    const fillId = Number(xf.getAttribute('fillId') || 0);
+    const numFmtId = Number(xf.getAttribute('numFmtId') || 0);
+    const alignmentEl = xf.getElementsByTagName('alignment')[0];
+    const align = alignmentEl ? alignmentEl.getAttribute('horizontal') || '' : '';
+    const font = fonts[fontId] || {};
+    const bgColor = fills[fillId] || '';
+    return {
+      bold: Boolean(font.bold),
+      italic: Boolean(font.italic),
+      textColor: font.textColor || '',
+      bgColor,
+      numFmtId,
+      align: ['left', 'center', 'right'].includes(align) ? align : '',
+    };
+  });
+
+  return xfs;
+}
+
+async function resolveExcelSheets(entries, parser) {
+  const wbXml = await readZipEntryText(entries, 'xl/workbook.xml');
+  if (wbXml) {
+    const wbDoc = parser.parseFromString(wbXml, 'application/xml');
+    const relMap = await parseOfficeRels(entries, 'xl/_rels/workbook.xml.rels', 'xl', parser);
+    const sheets = [];
+    Array.from(wbDoc.getElementsByTagName('sheet')).forEach((sheetEl, idx) => {
+      const name = sheetEl.getAttribute('name') || `Hoja ${idx + 1}`;
+      const rId = sheetEl.getAttribute('r:id') || sheetEl.getAttribute('id') || '';
+      const targetPath = relMap.get(rId);
+      if (targetPath && entries.has(targetPath)) {
+        sheets.push({ name, path: targetPath });
+      }
+    });
+    if (sheets.length > 0) return sheets;
+  }
+
+  return Array.from(entries.keys())
+    .filter((k) => /^xl\/worksheets\/sheet\d+\.xml$/i.test(k))
+    .sort((a, b) => {
+      const na = Number((a.match(/sheet(\d+)\.xml/i) || [])[1] || 0);
+      const nb = Number((b.match(/sheet(\d+)\.xml/i) || [])[1] || 0);
+      return na - nb;
+    })
+    .map((sheetPath, idx) => ({ name: `Hoja ${idx + 1}`, path: sheetPath }));
+}
+
+function buildExcelSheetGrid(sDoc, sharedStrings, cellStyles) {
+  const cells = new Map();
+  const merges = new Map();
+  const skipped = new Set();
+  let maxRow = -1;
+  let maxCol = -1;
+
+  const MAX_RENDER_ROWS = 400;
+  const MAX_RENDER_COLS = 40;
+
+  Array.from(sDoc.getElementsByTagName('mergeCell')).forEach((mc) => {
+    const ref = mc.getAttribute('ref') || '';
+    const parts = ref.split(':');
+    if (parts.length !== 2) return;
+    const start = parseCellReference(parts[0], 0, 0);
+    const end = parseCellReference(parts[1], 0, 0);
+    if (start.row >= MAX_RENDER_ROWS || start.col >= MAX_RENDER_COLS) return;
+    const cappedEndRow = Math.min(end.row, MAX_RENDER_ROWS - 1);
+    const cappedEndCol = Math.min(end.col, MAX_RENDER_COLS - 1);
+    const rowSpan = cappedEndRow - start.row + 1;
+    const colSpan = cappedEndCol - start.col + 1;
+    merges.set(`${start.row}:${start.col}`, { rowSpan, colSpan });
+    for (let r = start.row; r <= cappedEndRow; r++) {
+      for (let c = start.col; c <= cappedEndCol; c++) {
+        if (r !== start.row || c !== start.col) {
+          skipped.add(`${r}:${c}`);
+        }
+      }
+    }
+    maxRow = Math.max(maxRow, cappedEndRow);
+    maxCol = Math.max(maxCol, cappedEndCol);
+  });
+
+  const rows = Array.from(sDoc.getElementsByTagName('row'));
+  rows.forEach((rowEl, rFallback) => {
+    const rowAttr = rowEl.getAttribute('r');
+    const rowIdx = rowAttr ? Number(rowAttr) - 1 : rFallback;
+    if (rowIdx < 0 || rowIdx >= MAX_RENDER_ROWS) return;
+
+    const cNodes = Array.from(rowEl.getElementsByTagName('c'));
+    cNodes.forEach((cEl, cFallback) => {
+      const pos = parseCellReference(cEl.getAttribute('r'), rowIdx, cFallback);
+      if (pos.row < 0 || pos.col < 0 || pos.row >= MAX_RENDER_ROWS || pos.col >= MAX_RENDER_COLS) return;
+
+      const type = cEl.getAttribute('t') || '';
+      const styleIdx = Number(cEl.getAttribute('s') || 0);
+      const style = cellStyles[styleIdx] || null;
+      const vNode = cEl.getElementsByTagName('v')[0];
+      const isNode = cEl.getElementsByTagName('is')[0];
+
+      let text = '';
+      let isNumeric = false;
+
+      if (type === 's' && vNode) {
+        text = sharedStrings[Number(vNode.textContent || 0)] ?? '';
+      } else if (type === 'inlineStr' && isNode) {
+        const tNodes = Array.from(isNode.getElementsByTagName('t'));
+        text = tNodes.length > 0 ? tNodes.map((t) => t.textContent || '').join('') : isNode.textContent || '';
+      } else if (type === 'str' || type === 'e') {
+        text = vNode ? vNode.textContent || '' : '';
+      } else if (type === 'b' && vNode) {
+        text = vNode.textContent === '1' ? 'VERDADERO' : 'FALSO';
+      } else if (vNode && vNode.textContent !== null && vNode.textContent !== '') {
+        const raw = vNode.textContent;
+        const num = Number(raw);
+        if (style && style.numFmtId >= 14 && style.numFmtId <= 22 && Number.isFinite(num)) {
+          text = formatExcelSerialDate(num);
+        } else if (Number.isFinite(num)) {
+          isNumeric = true;
+          text = raw.includes('.') && !Number.isInteger(num) ? String(Number(num.toFixed(4))) : raw;
+        } else {
+          text = raw;
+        }
+      }
+
+      if (text !== '' || (style && style.bgColor)) {
+        cells.set(`${pos.row}:${pos.col}`, { text, isNumeric, style });
+        maxRow = Math.max(maxRow, pos.row);
+        maxCol = Math.max(maxCol, pos.col);
+      }
+    });
+  });
+
+  return { cells, merges, skipped, maxRow, maxCol };
+}
+
 async function renderLocalOfficePreview(file, ext, container) {
   container.innerHTML = '<p class="office-preview-box__meta">Procesando vista previa del documento...</p>';
 
   try {
     const entries = await extractZipEntries(file);
+    if (entries.size === 0 && ext === 'xls') {
+      throw new Error('Archivo Excel binario (.xls 97-2003)');
+    }
     const parser = new DOMParser();
 
     if (ext === 'docx') {
@@ -802,71 +1039,115 @@ async function renderLocalOfficePreview(file, ext, container) {
         });
       }
 
-      const sheetKeys = Array.from(entries.keys())
-        .filter((k) => /^xl\/worksheets\/sheet\d+\.xml$/i.test(k))
-        .sort();
+      const stylesXml = await readZipEntryText(entries, 'xl/styles.xml');
+      const cellStyles = parseExcelStyles(stylesXml, parser);
+      const sheetList = await resolveExcelSheets(entries, parser);
+      const excelMediaUrls = await buildOfficeMediaMap(entries, 'xl/media/');
 
-      if (sheetKeys.length === 0) throw new Error('No se encontraron hojas en el libro Excel');
+      if (sheetList.length === 0) throw new Error('No se encontraron hojas en el libro Excel');
 
       container.innerHTML = '';
       const tabsBar = document.createElement('div');
       tabsBar.className = 'office-sheet-tabs';
       const tableHolder = document.createElement('div');
-      tableHolder.className = 'office-table-wrap';
+      tableHolder.className = 'office-table-wrap office-table-wrap--excel';
 
-      const renderSheet = async (sheetPath, activeIdx) => {
+      const renderSheet = async (sheetInfo, activeIdx) => {
         Array.from(tabsBar.children).forEach((btn, idx) => {
           btn.classList.toggle('is-active', idx === activeIdx);
         });
-        const sheetXml = await readZipEntryText(entries, sheetPath);
+        const sheetXml = await readZipEntryText(entries, sheetInfo.path);
         if (!sheetXml) return;
         const sDoc = parser.parseFromString(sheetXml, 'application/xml');
-        const rows = Array.from(sDoc.getElementsByTagName('row'));
-        const table = document.createElement('table');
-        table.className = 'office-table';
 
-        rows.slice(0, 120).forEach((row, rIdx) => {
-          const tr = document.createElement('tr');
-          const cells = Array.from(row.getElementsByTagName('c'));
-          cells.forEach((c) => {
-            const cellEl = document.createElement(rIdx === 0 ? 'th' : 'td');
-            const type = c.getAttribute('t');
-            const vNode = c.getElementsByTagName('v')[0];
-            const isNode = c.getElementsByTagName('is')[0];
-            let val = vNode ? vNode.textContent || '' : '';
-            if (type === 's' && val !== '') {
-              val = sharedStrings[Number(val)] ?? val;
-            } else if (type === 'inlineStr' && isNode) {
-              val = isNode.textContent || '';
-            }
-            cellEl.textContent = val;
-            tr.appendChild(cellEl);
-          });
-          table.appendChild(tr);
-        });
-
+        const gridData = buildExcelSheetGrid(sDoc, sharedStrings, cellStyles);
         tableHolder.innerHTML = '';
-        if (rows.length === 0) {
+
+        if (gridData.maxRow < 0 || gridData.maxCol < 0) {
           const emptyMsg = document.createElement('p');
+          emptyMsg.className = 'office-preview-box__meta';
           emptyMsg.textContent = 'Esta hoja de cálculo no contiene celdas con datos.';
           tableHolder.appendChild(emptyMsg);
         } else {
+          const table = document.createElement('table');
+          table.className = 'office-table office-table--excel';
+
+          // Cabecera de letras de columna estilo Excel (A, B, C...)
+          const thead = document.createElement('thead');
+          const headTr = document.createElement('tr');
+          const cornerTh = document.createElement('th');
+          cornerTh.className = 'excel-corner-cell';
+          cornerTh.textContent = '#';
+          headTr.appendChild(cornerTh);
+
+          for (let c = 0; c <= gridData.maxCol; c++) {
+            const colTh = document.createElement('th');
+            colTh.className = 'excel-col-header';
+            colTh.textContent = colIndexToLetter(c);
+            headTr.appendChild(colTh);
+          }
+          thead.appendChild(headTr);
+          table.appendChild(thead);
+
+          const tbody = document.createElement('tbody');
+          for (let r = 0; r <= gridData.maxRow; r++) {
+            const tr = document.createElement('tr');
+            const rowNumTh = document.createElement('th');
+            rowNumTh.className = 'excel-row-header tabular-nums';
+            rowNumTh.textContent = String(r + 1);
+            tr.appendChild(rowNumTh);
+
+            for (let c = 0; c <= gridData.maxCol; c++) {
+              const key = `${r}:${c}`;
+              if (gridData.skipped.has(key)) continue;
+
+              const cellInfo = gridData.cells.get(key);
+              const td = document.createElement('td');
+              const merge = gridData.merges.get(key);
+              if (merge) {
+                if (merge.colSpan > 1) td.colSpan = merge.colSpan;
+                if (merge.rowSpan > 1) td.rowSpan = merge.rowSpan;
+              }
+
+              if (cellInfo) {
+                td.textContent = cellInfo.text;
+                if (cellInfo.isNumeric) td.classList.add('excel-cell--num');
+                if (cellInfo.style) {
+                  if (cellInfo.style.bold) td.style.fontWeight = '700';
+                  if (cellInfo.style.italic) td.style.fontStyle = 'italic';
+                  if (cellInfo.style.bgColor) td.style.backgroundColor = cellInfo.style.bgColor;
+                  if (cellInfo.style.textColor) td.style.color = cellInfo.style.textColor;
+                  if (cellInfo.style.align) td.style.textAlign = cellInfo.style.align;
+                }
+              }
+              tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+          }
+          table.appendChild(tbody);
           tableHolder.appendChild(table);
+        }
+
+        // Si el libro Excel contiene imágenes o diagramas incrustados en xl/media/, mostrarlos debajo
+        if (excelMediaUrls.size > 0 && activeIdx === 0) {
+          excelMediaUrls.forEach((url) => {
+            tableHolder.appendChild(createEmbeddedImageFigure(url, sheetInfo.name));
+          });
         }
       };
 
-      sheetKeys.forEach((key, idx) => {
+      sheetList.forEach((sheetInfo, idx) => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = `btn-outline-sm${idx === 0 ? ' is-active' : ''}`;
-        btn.textContent = `Hoja ${idx + 1}`;
-        btn.addEventListener('click', () => renderSheet(key, idx));
+        btn.textContent = sheetInfo.name;
+        btn.addEventListener('click', () => renderSheet(sheetInfo, idx));
         tabsBar.appendChild(btn);
       });
 
       container.appendChild(tabsBar);
       container.appendChild(tableHolder);
-      await renderSheet(sheetKeys[0], 0);
+      await renderSheet(sheetList[0], 0);
       return;
     }
 
@@ -945,12 +1226,17 @@ async function renderLocalOfficePreview(file, ext, container) {
     }
 
     throw new Error('Formato binario clásico');
-  } catch {
+  } catch (err) {
     container.innerHTML = '';
     const infoP = document.createElement('p');
     infoP.className = 'office-preview-box__notice';
-    infoP.textContent =
-      'Este archivo de Office está listo para descargarse. Para usar el visor externo de Microsoft Office Online o Google Docs Viewer, vincula su URL pública HTTPS en el panel lateral.';
+    if (ext === 'xls' || ext === 'doc' || ext === 'ppt') {
+      infoP.textContent =
+        `El formato binario antiguo (.${ext}) no se puede renderizar directamente en el navegador sin servidor. Guárdalo como .${ext}x (Excel/Word/PowerPoint moderno) para previsualizarlo aquí al instante, vincúlalo por URL pública HTTPS para Microsoft Office Online / Google Docs Viewer, o descárgalo directamente.`;
+    } else {
+      infoP.textContent =
+        'Este archivo de Office está listo para descargarse. Para usar el visor externo de Microsoft Office Online o Google Docs Viewer, vincula su URL pública HTTPS en el panel lateral.';
+    }
     container.appendChild(infoP);
   }
 }
@@ -966,6 +1252,15 @@ function initPortfolioApp() {
   const backToCoverBtn = document.getElementById('back-to-cover-btn');
   const resetNamesBtn = document.getElementById('reset-names-btn');
   const loadedCounterEl = document.getElementById('loaded-counter');
+
+  const sharePortfolioBtn = document.getElementById('share-portfolio-btn');
+  const importPackageBtn = document.getElementById('import-package-btn');
+  const importPackageInput = document.getElementById('import-package-input');
+  const shareModal = document.getElementById('share-modal');
+  const closeShareModalBtn = document.getElementById('close-share-modal-btn');
+  const exportPackageBtn = document.getElementById('export-package-btn');
+  const exportManifestBtn = document.getElementById('export-manifest-btn');
+  const shareStatusMsg = document.getElementById('share-status-msg');
 
   const annexButtonsList = document.getElementById('annex-buttons-list');
   const annexDrawer = document.getElementById('annex-drawer');
@@ -1108,6 +1403,111 @@ function initPortfolioApp() {
       updateLoadedCounter();
     }
   });
+
+  // Cargar evidencias publicadas en el repositorio (evidencias/manifest.json) para que cualquier visitante las vea
+  loadPublishedManifest();
+
+  function resolvePublicHttpsUrl(relativePath) {
+    try {
+      if (typeof window === 'undefined' || !window.location) return '';
+      const resolved = new URL(relativePath, window.location.href);
+      if (resolved.protocol === 'https:' || resolved.protocol === 'http:') {
+        return resolved.href;
+      }
+    } catch {
+      // Silencioso en file://
+    }
+    return '';
+  }
+
+  function applyPublishedManifestData(manifest) {
+    if (!manifest || !Array.isArray(manifest.annexes)) return;
+    let changed = false;
+
+    manifest.annexes.forEach((item) => {
+      if (!item || !item.id) return;
+      const annexId = String(item.id);
+      const annexObj = state.annexes.find((a) => a.id === annexId);
+      if (!annexObj) return;
+
+      if (typeof item.title === 'string' && item.title.trim() && !titlesMap[annexId]) {
+        annexObj.title = item.title.trim();
+      }
+      if (typeof item.description === 'string' && item.description.trim() && !descriptionsMap[annexId]) {
+        annexObj.description = item.description.trim();
+      }
+
+      const existing = state.sessionFiles.get(annexId);
+      if (existing && existing.file) {
+        // El usuario tiene una copia local en su navegador; no la sobrescribimos
+        return;
+      }
+
+      const ext = item.ext || getFileExtension(item.fileName || item.path || '');
+      const publicUrl = item.publicUrl || resolvePublicHttpsUrl(item.path || '');
+      if (item.path || publicUrl) {
+        state.sessionFiles.set(annexId, {
+          file: null,
+          name: item.fileName || (item.path ? item.path.split('/').pop() : `Anexo-${annexId}.${ext || 'pdf'}`),
+          size: Number(item.size || 0),
+          ext,
+          objectUrl: '',
+          publicUrl,
+          publishedPath: item.path || '',
+          isPublished: true,
+          loadingPublished: false,
+          officeEngine: ['docx', 'xlsx', 'pptx'].includes(ext) ? 'local' : 'officeOnline',
+        });
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      if (state.view === 'annexes') {
+        renderAll();
+      } else {
+        updateLoadedCounter();
+      }
+    }
+  }
+
+  async function loadPublishedManifest() {
+    if (typeof window !== 'undefined' && window.location && window.location.protocol !== 'file:') {
+      try {
+        const res = await fetch(`./evidencias/manifest.json?t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          applyPublishedManifestData(data);
+          return;
+        }
+      } catch {
+        // Continuar con respaldo manifest.js
+      }
+    }
+    if (typeof window !== 'undefined' && window.ADSO_PUBLISHED_MANIFEST) {
+      applyPublishedManifestData(window.ADSO_PUBLISHED_MANIFEST);
+    }
+  }
+
+  async function ensurePublishedFileLoaded(annexId, entry) {
+    if (!entry || entry.file || !entry.publishedPath || entry.loadingPublished) return;
+    entry.loadingPublished = true;
+    try {
+      const res = await fetch(entry.publishedPath, { cache: 'no-store' });
+      if (!res.ok) throw new Error('No disponible');
+      const blob = await res.blob();
+      const loadedFile = new File([blob], entry.name, { type: blob.type || undefined });
+      entry.file = loadedFile;
+      entry.size = loadedFile.size || entry.size;
+      entry.objectUrl = URL.createObjectURL(loadedFile);
+      entry.loadingPublished = false;
+      if (state.activeAnnexId === annexId && state.view === 'annexes') {
+        renderAll();
+      }
+    } catch {
+      entry.loadingPublished = false;
+    }
+  }
 
   async function ensureInitialVersions() {
     for (const [annexId, entry] of state.sessionFiles) {
@@ -1311,14 +1711,15 @@ function initPortfolioApp() {
       .map((e) => `.${e}`)
       .join(', ')}`;
 
-    if (attached && attached.file) {
+    if (attached && (attached.file || attached.isPublished)) {
       dropzone.hidden = true;
       attachedFileCard.hidden = false;
-      attachedExtTag.textContent = attached.ext.toUpperCase();
+      attachedExtTag.textContent = (attached.ext || 'DOC').toUpperCase();
       attachedFileName.textContent = attached.name;
-      attachedFileMeta.textContent = `${formatFileSize(attached.size)} · Previsualización activa`;
+      const originNote = attached.isPublished && !attached.file ? 'Publicado (cargando...)' : 'Previsualización activa';
+      attachedFileMeta.textContent = `${formatFileSize(attached.size)} · ${originNote}`;
       if (drawerDownloadLink) {
-        drawerDownloadLink.href = attached.objectUrl;
+        drawerDownloadLink.href = attached.objectUrl || attached.publishedPath || attached.publicUrl || '#';
         drawerDownloadLink.setAttribute('download', attached.name);
       }
     } else {
@@ -1360,7 +1761,7 @@ function initPortfolioApp() {
     previewHeading.textContent = annex.title;
     previewContent.innerHTML = '';
 
-    const hasFileOrUrl = Boolean(attached && (attached.objectUrl || attached.publicUrl));
+    const hasFileOrUrl = Boolean(attached && (attached.objectUrl || attached.publicUrl || attached.publishedPath));
 
     if (!hasFileOrUrl) {
       previewEmpty.hidden = false;
@@ -1372,6 +1773,18 @@ function initPortfolioApp() {
         annex.kind === 'video'
           ? 'Carga un archivo de video (.mp4, .webm, .ogg o .mov) desde el panel desplegable para reproducirlo y descargarlo aquí.'
           : 'Carga un documento (.pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx) o una imagen (.png, .jpg, .gif, .webp, .svg) desde el panel desplegable para previsualizarlo y descargarlo aquí.';
+      return;
+    }
+
+    // Si proviene del repositorio publicado (manifest.json) y aún no se ha descargado en memoria, obtenerlo ahora
+    if (attached && attached.publishedPath && !attached.file && !viewing) {
+      previewEmpty.hidden = true;
+      previewContent.hidden = false;
+      previewDownloadLink.hidden = false;
+      previewDownloadLink.href = attached.publishedPath;
+      previewDownloadLink.setAttribute('download', attached.name || `${annex.id}`);
+      previewContent.innerHTML = '<p class="office-preview-box__meta">Cargando archivo publicado para previsualizar...</p>';
+      ensurePublishedFileLoaded(annex.id, attached);
       return;
     }
 
@@ -1492,7 +1905,7 @@ function initPortfolioApp() {
       video.controls = true;
       video.playsInline = true;
       video.preload = 'metadata';
-      video.src = attached.objectUrl;
+      video.src = attached.objectUrl || attached.publishedPath || attached.publicUrl;
       video.setAttribute('aria-label', `Reproductor de video para ${attached.name}`);
 
       [0.5, 1, 1.25, 1.5, 2].forEach((rate) => {
@@ -1525,7 +1938,10 @@ function initPortfolioApp() {
     // Soporta vista interactiva integrada + Microsoft Office Online + Google Docs Viewer
     const urls = buildOfficeViewerUrls(attached.publicUrl);
     const canLocalParse = Boolean(attached.file && ['docx', 'xlsx', 'pptx'].includes(attached.ext));
-    const defaultEngine = attached.officeEngine || (urls ? 'officeOnline' : canLocalParse ? 'local' : 'summary');
+    let defaultEngine = attached.officeEngine || (canLocalParse ? 'local' : urls ? 'officeOnline' : 'summary');
+    if (defaultEngine === 'local' && !canLocalParse) {
+      defaultEngine = urls ? 'officeOnline' : 'summary';
+    }
     attached.officeEngine = defaultEngine;
 
     const tabs = document.createElement('div');
@@ -2056,6 +2472,242 @@ function initPortfolioApp() {
     applyZoomTransform(previewContent.querySelector('.preview-zoom-wrapper'));
   });
 
+  function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    const chunkSize = 0x8000;
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary);
+  }
+
+  function base64ToUint8Array(base64) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  }
+
+  function triggerDownloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  function sanitizePublishedFileName(annexId, originalName) {
+    const safe = String(originalName || `anexo-${annexId}`)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9._-]+/g, '-');
+    return `anexo-${annexId}-${safe}`;
+  }
+
+  async function exportPortablePackage() {
+    if (shareStatusMsg) shareStatusMsg.textContent = 'Generando paquete portátil...';
+    const items = [];
+    let skippedLarge = 0;
+
+    for (const annex of state.annexes) {
+      const entry = state.sessionFiles.get(annex.id);
+      const itemData = {
+        id: annex.id,
+        title: annex.title,
+        description: annex.description,
+        publicUrl: entry ? entry.publicUrl || '' : '',
+      };
+
+      if (entry && entry.file) {
+        if (entry.file.size > 100 * 1024 * 1024) {
+          skippedLarge += 1;
+        } else {
+          const buf = await entry.file.arrayBuffer();
+          itemData.fileName = entry.name;
+          itemData.mimeType = entry.file.type || 'application/octet-stream';
+          itemData.ext = entry.ext;
+          itemData.size = entry.size;
+          itemData.base64 = arrayBufferToBase64(buf);
+        }
+      }
+      items.push(itemData);
+    }
+
+    const payload = {
+      format: 'adso-portafolio-grupo8',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      annexes: items,
+    };
+
+    const jsonBlob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+    triggerDownloadBlob(jsonBlob, 'portafolio-echele-camello-grupo8.json');
+
+    if (shareStatusMsg) {
+      shareStatusMsg.textContent =
+        skippedLarge > 0
+          ? `Paquete descargado (${skippedLarge} archivo(s) > 100 MB omitidos del JSON; usa Opción 2 para archivos muy grandes).`
+          : 'Paquete descargado. Envíalo a tus compañeros/instructor para que pulsen «Importar paquete».';
+    }
+  }
+
+  async function exportGithubEvidencias() {
+    const manifestEntries = [];
+    let downloadedCount = 0;
+
+    for (const annex of state.annexes) {
+      const entry = state.sessionFiles.get(annex.id);
+      if (!entry || (!entry.file && !entry.publicUrl)) continue;
+
+      if (entry.file) {
+        const cleanName = sanitizePublishedFileName(annex.id, entry.name);
+        manifestEntries.push({
+          id: annex.id,
+          title: annex.title,
+          description: annex.description,
+          fileName: entry.name,
+          path: `./evidencias/${cleanName}`,
+          size: entry.size,
+          ext: entry.ext,
+        });
+        triggerDownloadBlob(entry.file, cleanName);
+        downloadedCount += 1;
+      } else if (entry.publicUrl) {
+        manifestEntries.push({
+          id: annex.id,
+          title: annex.title,
+          description: annex.description,
+          fileName: entry.name,
+          publicUrl: entry.publicUrl,
+          size: entry.size,
+          ext: entry.ext,
+        });
+      }
+    }
+
+    const manifestObj = {
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      annexes: manifestEntries,
+    };
+
+    triggerDownloadBlob(
+      new Blob([JSON.stringify(manifestObj, null, 2)], { type: 'application/json' }),
+      'manifest.json'
+    );
+    triggerDownloadBlob(
+      new Blob([`window.ADSO_PUBLISHED_MANIFEST = ${JSON.stringify(manifestObj, null, 2)};\n`], {
+        type: 'text/javascript',
+      }),
+      'manifest.js'
+    );
+
+    if (shareStatusMsg) {
+      shareStatusMsg.textContent = `Descargados manifest.json, manifest.js y ${downloadedCount} archivo(s). Cópialos en la carpeta evidencias/ del repositorio y súbelos a GitHub.`;
+    }
+  }
+
+  async function importPortablePackage(file) {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data || !Array.isArray(data.annexes)) {
+        window.alert('El archivo seleccionado no es un paquete válido del Portafolio ADSO.');
+        return;
+      }
+
+      for (const item of data.annexes) {
+        if (!item || !item.id) continue;
+        const annexId = String(item.id);
+        const annexObj = state.annexes.find((a) => a.id === annexId);
+        if (!annexObj) continue;
+
+        if (typeof item.title === 'string' && item.title.trim()) {
+          annexObj.title = item.title.trim();
+          titlesMap[annexId] = annexObj.title;
+        }
+        if (typeof item.description === 'string' && item.description.trim()) {
+          annexObj.description = item.description.trim();
+          descriptionsMap[annexId] = annexObj.description;
+        }
+        if (typeof item.publicUrl === 'string' && item.publicUrl.trim()) {
+          publicUrlsMap[annexId] = item.publicUrl.trim();
+        }
+
+        if (item.base64 && item.fileName) {
+          const bytes = base64ToUint8Array(item.base64);
+          const restoredFile = new File([bytes], item.fileName, {
+            type: item.mimeType || 'application/octet-stream',
+          });
+          const ext = item.ext || getFileExtension(item.fileName);
+          const existing = state.sessionFiles.get(annexId);
+          if (existing && existing.objectUrl) URL.revokeObjectURL(existing.objectUrl);
+
+          const entry = {
+            file: restoredFile,
+            name: restoredFile.name,
+            size: restoredFile.size,
+            ext,
+            objectUrl: URL.createObjectURL(restoredFile),
+            publicUrl: item.publicUrl || '',
+            officeEngine: ['docx', 'xlsx', 'pptx'].includes(ext) ? 'local' : 'officeOnline',
+            versionId: null,
+          };
+          state.sessionFiles.set(annexId, entry);
+          await saveFileToIndexedDB(annexId, restoredFile, ext);
+          const ver = await addVersionToIndexedDB(annexId, restoredFile, ext);
+          if (ver) entry.versionId = ver.versionId;
+          await refreshVersions(annexId);
+        }
+      }
+
+      savePersistedMap(window.localStorage, STORAGE_KEYS.titles, titlesMap);
+      savePersistedMap(window.localStorage, STORAGE_KEYS.descriptions, descriptionsMap);
+      savePersistedMap(window.localStorage, STORAGE_KEYS.publicUrls, publicUrlsMap);
+      renderAll();
+      window.alert('Paquete del portafolio importado correctamente. Ya puedes previsualizar todos los anexos.');
+    } catch {
+      window.alert('No se pudo leer el archivo de paquete (.json). Verifica que esté completo y sin daños.');
+    }
+  }
+
+  if (sharePortfolioBtn && shareModal) {
+    sharePortfolioBtn.addEventListener('click', () => {
+      if (shareStatusMsg) shareStatusMsg.textContent = '';
+      shareModal.hidden = false;
+    });
+  }
+  if (closeShareModalBtn && shareModal) {
+    closeShareModalBtn.addEventListener('click', () => {
+      shareModal.hidden = true;
+    });
+    shareModal.addEventListener('click', (e) => {
+      if (e.target === shareModal) shareModal.hidden = true;
+    });
+  }
+  if (exportPackageBtn) {
+    exportPackageBtn.addEventListener('click', exportPortablePackage);
+  }
+  if (exportManifestBtn) {
+    exportManifestBtn.addEventListener('click', exportGithubEvidencias);
+  }
+  if (importPackageBtn && importPackageInput) {
+    importPackageBtn.addEventListener('click', () => importPackageInput.click());
+    importPackageInput.addEventListener('change', (e) => {
+      const target = e.target;
+      if (target.files && target.files[0]) {
+        importPortablePackage(target.files[0]);
+        target.value = '';
+      }
+    });
+  }
+
   window.addEventListener('beforeunload', () => {
     state.sessionFiles.forEach((entry) => {
       if (entry.objectUrl) URL.revokeObjectURL(entry.objectUrl);
@@ -2093,6 +2745,11 @@ globalThis.ADSO_PORTFOLIO = {
   addVersionToIndexedDB,
   listVersionsFromIndexedDB,
   deleteVersionFromIndexedDB,
+  extractZipEntries,
+  resolveExcelSheets,
+  parseExcelStyles,
+  buildExcelSheetGrid,
+  colIndexToLetter,
 };
 
 if (typeof document !== 'undefined') {

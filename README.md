@@ -58,7 +58,22 @@ El proyecto está separado en tres archivos principales sin dependencias de fram
 - **Nombres y descripciones editables:** Se guardan de forma persistente en `localStorage` para que sobrevivan a recargas de la página.
 - **Archivos en sesión (`URL.createObjectURL`) e `IndexedDB`:** Los archivos cargados generan una URL de objeto en memoria (`URL.createObjectURL(file)`) para su previsualización y descarga inmediata sin salir de la página, y además se respaldan automáticamente en `IndexedDB` del navegador local.
 - **Visor de imágenes:** los diagramas (dominio, casos de uso, actividad, etc.) en `.png`, `.jpg`, `.gif`, `.webp`, `.svg` o `.bmp` se muestran directamente en el área de previsualización, con zoom, desplazamiento, descarga y apertura en pestaña nueva.
+- **Visor de Excel (`.xlsx`):** muestra la cuadrícula completa tipo Excel (columnas A, B, C…, filas, celdas combinadas, colores, negritas, fechas, fórmulas cacheadas y pestañas con los nombres reales de cada hoja).
 - **Visores de Office:** Los archivos `.docx`, `.xlsx` y `.pptx` cuentan con una **Vista Interactiva Local** integrada en el navegador; adicionalmente, cuando el archivo está alojado en una URL pública HTTPS, se habilitan los visores de **Microsoft Office Online** y **Google Docs Viewer**.
+
+---
+
+## Cómo hacer que cualquier persona vea tus archivos en cualquier computador
+
+Los archivos que subes directamente desde tu navegador se guardan únicamente en el `IndexedDB` de ese computador. Para que tu instructor y tus compañeros vean el contenido al abrir `https://luistombe.github.io/Pagina-Motta/`:
+
+1. **Opción recomendada (publicado fijo en GitHub Pages):**
+   - En la barra superior de la página, pulsa **«Compartir / Publicar» → «Descargar manifest.json + archivos para evidencias/»**.
+   - Copia los archivos descargados dentro de la carpeta `evidencias/` de este repositorio y súbelos a GitHub (`main` y `gh-pages`).
+   - Al entrar cualquier persona desde cualquier computador, la página cargará automáticamente todos los anexos publicados desde `evidencias/manifest.json`.
+2. **Opción portátil en un solo archivo (`.json`):**
+   - Pulsa **«Compartir / Publicar» → «Descargar paquete portátil (.json)»** y envíaselo a quien desees.
+   - Esa persona abre la página, pulsa **«Importar paquete»** y al instante tendrá todos los anexos listos para previsualizar y descargar.
 
 ---
 

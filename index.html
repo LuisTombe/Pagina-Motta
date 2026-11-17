@@ -24,7 +24,7 @@
     />
 
     <!-- Hoja de estilos principal (CSS3 puro sin frameworks) -->
-    <link rel="stylesheet" href="./styles.css?v=20261117e" />
+    <link rel="stylesheet" href="./styles.css?v=20261117f" />
   </head>
   <body>
     <!-- Marca de agua institucional global del SENA sobre fondo blanco -->
@@ -146,6 +146,13 @@
         </nav>
 
         <div class="top-bar__actions">
+          <button id="share-portfolio-btn" type="button" class="btn-navy-sm" title="Publicar o compartir tus anexos para que cualquier persona los vea">
+            Compartir / Publicar
+          </button>
+          <button id="import-package-btn" type="button" class="btn-outline-sm" title="Cargar un paquete .json compartido por otro compañero">
+            Importar paquete
+          </button>
+          <input id="import-package-input" type="file" accept=".json,application/json" class="sr-only" />
           <button id="reset-names-btn" type="button" class="btn-ghost-sm" title="Restaurar los nombres predeterminados de los 13 anexos">
             Restaurar nombres
           </button>
@@ -428,7 +435,53 @@
       </main>
     </div>
 
-    <!-- Script principal en JavaScript puro (funciona tanto en servidor web como abriendo index.html localmente) -->
-    <script src="./app.js?v=20261117e" defer></script>
+    <!-- Modal para compartir / publicar los anexos para cualquier persona -->
+    <div id="share-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="share-modal-title" hidden>
+      <div class="modal-card">
+        <div class="modal-card__head">
+          <div>
+            <h2 id="share-modal-title" class="modal-card__title">Compartir y publicar anexos para todos</h2>
+            <p class="modal-card__desc">
+              Los archivos que subes aquí se guardan solo en tu navegador. Usa una de estas opciones para que tu instructor o compañeros los vean en cualquier computador:
+            </p>
+          </div>
+          <button id="close-share-modal-btn" type="button" class="btn-icon" aria-label="Cerrar ventana">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
+              <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="share-option-box">
+          <h3 class="share-option-box__title">Opción 1: Archivo portátil para enviar por WhatsApp / Drive / Correo</h3>
+          <p class="share-option-box__text">
+            Empaqueta todos tus anexos cargados (títulos, descripciones y archivos) en un solo archivo <code>.json</code>. Cualquier persona abre el enlace de la página, pulsa <strong>«Importar paquete»</strong> y verá todo al instante.
+          </p>
+          <div class="share-option-box__actions">
+            <button id="export-package-btn" type="button" class="btn-navy-sm">
+              Descargar paquete portátil (.json)
+            </button>
+          </div>
+        </div>
+
+        <div class="share-option-box">
+          <h3 class="share-option-box__title">Opción 2: Publicar fijo en GitHub Pages (para que todos lo vean sin importar nada)</h3>
+          <p class="share-option-box__text">
+            Descarga el archivo <code>manifest.json</code> (y copia tus archivos de anexos en la carpeta <code>evidencias/</code> del repositorio). Al subir esa carpeta a GitHub, cualquier persona verá y previsualizará los 13 anexos automáticamente al abrir <code>luistombe.github.io/Pagina-Motta</code>.
+          </p>
+          <div class="share-option-box__actions">
+            <button id="export-manifest-btn" type="button" class="btn-outline-sm">
+              Descargar manifest.json + archivos para evidencias/
+            </button>
+          </div>
+        </div>
+
+        <p id="share-status-msg" class="share-status-msg" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <!-- Manifiesto de evidencias publicadas y script principal en JavaScript puro -->
+    <script src="./evidencias/manifest.js?v=20261117f" defer></script>
+    <script src="./app.js?v=20261117f" defer></script>
   </body>
 </html>

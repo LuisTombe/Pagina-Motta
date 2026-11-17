@@ -1405,6 +1405,162 @@ body {
   background-color: #fcfdfe;
 }
 
+/* Estilos de cuadrícula tipo Excel para previsualización de .xlsx */
+.office-table-wrap--excel {
+  max-height: 560px;
+  overflow: auto;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background-color: #ffffff;
+}
+
+.office-table--excel {
+  font-size: 0.81rem;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.office-table--excel th,
+.office-table--excel td {
+  min-width: 78px;
+  max-width: 280px;
+  padding: 5px 9px;
+  border-right: 1px solid #cbd5e1;
+  border-bottom: 1px solid #cbd5e1;
+  border-top: none;
+  border-left: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.office-table--excel thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #e2e8f0;
+  color: var(--navy-950);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.office-table--excel .excel-corner-cell {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  min-width: 42px;
+  width: 42px;
+  background-color: #cbd5e1;
+}
+
+.office-table--excel .excel-row-header {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 42px;
+  width: 42px;
+  background-color: #f1f5f9;
+  color: var(--text-secondary);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.73rem;
+  font-weight: 600;
+}
+
+.office-table--excel .excel-cell--num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Modal para compartir / publicar portafolio */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background-color: rgba(7, 25, 49, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeScreenIn 180ms ease-out;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background-color: #ffffff;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 50px rgba(7, 25, 49, 0.25);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.modal-card__title {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: var(--navy-950);
+}
+
+.modal-card__desc {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.share-option-box {
+  padding: 16px;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.share-option-box__title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--navy-900);
+}
+
+.share-option-box__text {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.share-option-box__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.share-status-msg {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--navy-800);
+}
+
 .office-slides-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
