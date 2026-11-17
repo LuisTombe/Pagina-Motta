@@ -1218,6 +1218,24 @@ body {
   flex-direction: column;
 }
 
+/* Visor de imágenes (diagramas): se ajusta al ancho del área y admite zoom y desplazamiento */
+.preview-zoom-wrapper--image {
+  min-height: 0;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.preview-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+  background-color: #ffffff;
+  box-shadow: var(--shadow-subtle);
+}
+
 .preview-pdf-frame {
   width: 100%;
   flex: 1;

@@ -134,3 +134,16 @@ test('control de versiones: getNextVersionNumber y sortVersionsDescending ordena
     [3, 2, 1]
   );
 });
+
+test('imagenes (diagramas): se aceptan en los anexos 1-12, se previsualizan como imagen y no en el anexo 13 de video', () => {
+  const annex4 = DEFAULT_ANNEXES[3];
+  const annex13 = DEFAULT_ANNEXES[12];
+
+  for (const name of ['diagrama.png', 'dominio.JPG', 'modelo.jpeg', 'flujo.gif', 'er.webp', 'uml.svg', 'foto.bmp']) {
+    assert.equal(validateFileForAnnex(annex4, { name, size: 2048 }).valid, true, name);
+  }
+  assert.equal(validateFileForAnnex(annex13, { name: 'diagrama.png', size: 2048 }).valid, false);
+  assert.equal(getPreviewCategory('png'), 'image');
+  assert.equal(getPreviewCategory('svg'), 'image');
+  assert.equal(getPreviewCategory('pdf'), 'pdf');
+});

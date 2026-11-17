@@ -36,7 +36,7 @@ El proyecto está separado en tres archivos principales sin dependencias de fram
 
 ## Los 13 Anexos Numerados y Tipos de Archivo
 
-- **Anexos 1 a 12** (documentos `.doc`, `.docx`, `.pdf`, hojas de cálculo `.xls`, `.xlsx` y presentaciones `.ppt`, `.pptx`, hasta 500 MB):
+- **Anexos 1 a 12** (documentos `.doc`, `.docx`, `.pdf`, hojas de cálculo `.xls`, `.xlsx`, presentaciones `.ppt`, `.pptx` e **imágenes** `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg`, `.bmp`, hasta 2048 MB):
   - **Anexo 1.** Planeación de actividades
   - **Anexo 2.** Diagramas de casos de uso
   - **Anexo 3.** Diagramas de actividad
@@ -57,6 +57,7 @@ El proyecto está separado en tres archivos principales sin dependencias de fram
 
 - **Nombres y descripciones editables:** Se guardan de forma persistente en `localStorage` para que sobrevivan a recargas de la página.
 - **Archivos en sesión (`URL.createObjectURL`) e `IndexedDB`:** Los archivos cargados generan una URL de objeto en memoria (`URL.createObjectURL(file)`) para su previsualización y descarga inmediata sin salir de la página, y además se respaldan automáticamente en `IndexedDB` del navegador local.
+- **Visor de imágenes:** los diagramas (dominio, casos de uso, actividad, etc.) en `.png`, `.jpg`, `.gif`, `.webp`, `.svg` o `.bmp` se muestran directamente en el área de previsualización, con zoom, desplazamiento, descarga y apertura en pestaña nueva.
 - **Visores de Office:** Los archivos `.docx`, `.xlsx` y `.pptx` cuentan con una **Vista Interactiva Local** integrada en el navegador; adicionalmente, cuando el archivo está alojado en una URL pública HTTPS, se habilitan los visores de **Microsoft Office Online** y **Google Docs Viewer**.
 
 ---

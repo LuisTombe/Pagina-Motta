@@ -22,7 +22,8 @@ const IDB_CONFIG = {
   dbVersion: 2,
 };
 
-const DOCUMENT_EXTENSIONS = ['doc', 'docx', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx'];
+const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'];
+const DOCUMENT_EXTENSIONS = ['doc', 'docx', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx', ...IMAGE_EXTENSIONS];
 const OFFICE_EXTENSIONS = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
 const VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'avi', 'mkv'];
 
@@ -264,6 +265,7 @@ function buildOfficeViewerUrls(publicUrl) {
 function getPreviewCategory(extension) {
   const ext = String(extension || '').toLowerCase();
   if (ext === 'pdf') return 'pdf';
+  if (IMAGE_EXTENSIONS.includes(ext)) return 'image';
   if (VIDEO_EXTENSIONS.includes(ext)) return 'video';
   if (OFFICE_EXTENSIONS.includes(ext)) return 'office';
   return 'unsupported';
@@ -1158,7 +1160,7 @@ function initPortfolioApp() {
     drawerAcceptedLabel.textContent =
       annex.kind === 'video'
         ? 'Formato requerido: Video (.mp4, .webm, .ogg, .mov, .m4v)'
-        : 'Formatos: PDF, Word (.doc/.docx), Excel (.xls/.xlsx), PowerPoint (.ppt/.pptx)';
+        : 'Formatos: PDF, Word, Excel, PowerPoint e imágenes (.png, .jpg, .jpeg, .gif, .webp, .svg, .bmp)';
 
     annexTitleInput.value = annex.title;
     annexDescInput.value = annex.description;
@@ -1229,7 +1231,7 @@ function initPortfolioApp() {
       previewEmptyHint.textContent =
         annex.kind === 'video'
           ? 'Carga un archivo de video (.mp4, .webm, .ogg o .mov) desde el panel desplegable para reproducirlo y descargarlo aquí.'
-          : 'Carga un documento (.pdf, .doc, .docx, .xls, .xlsx, .ppt o .pptx) desde el panel desplegable para previsualizarlo y descargarlo aquí.';
+          : 'Carga un documento (.pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx) o una imagen (.png, .jpg, .gif, .webp, .svg) desde el panel desplegable para previsualizarlo y descargarlo aquí.';
       return;
     }
 
@@ -1302,6 +1304,30 @@ function initPortfolioApp() {
     }
 
     // 2. Previsualización de Video en Anexo L ("Anexos Html") con <video controls>
+    // 1b. Previsualización de imágenes (diagramas de dominio, casos de uso, etc.) con zoom y desplazamiento
+    if (category === 'image') {
+      const zoomWrap = document.createElement('div');
+      zoomWrap.className = 'preview-zoom-wrapper preview-zoom-wrapper--image';
+
+      const img = document.createElement('img');
+      img.className = 'preview-image';
+      img.src = attached.objectUrl || attached.publicUrl;
+      img.alt = `Imagen: ${attached.name}`;
+      img.decoding = 'async';
+      img.addEventListener('error', () => {
+        zoomWrap.innerHTML = '';
+        const msg = document.createElement('p');
+        msg.className = 'office-preview-box__notice';
+        msg.textContent = 'No se pudo mostrar esta imagen. Puedes descargarla con el botón «Descargar».';
+        zoomWrap.appendChild(msg);
+      });
+
+      zoomWrap.appendChild(img);
+      applyZoomTransform(zoomWrap);
+      previewContent.appendChild(zoomWrap);
+      return;
+    }
+
     if (category === 'video') {
       const zoomWrap = document.createElement('div');
       zoomWrap.className = 'preview-zoom-wrapper';
