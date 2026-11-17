@@ -18,6 +18,8 @@ const STORAGE_KEYS = {
 const IDB_CONFIG = {
   dbName: 'adso_portafolio_files_db_v1',
   storeName: 'annex_files',
+  versionsStoreName: 'annex_versions',
+  dbVersion: 2,
 };
 
 const DOCUMENT_EXTENSIONS = ['doc', 'docx', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx'];
@@ -347,26 +349,52 @@ function mergeAnnexesWithStorage(baseAnnexes, titlesMap, descriptionsMap) {
  * Respaldo local en IndexedDB para que los archivos cargados por el usuario
  * se mantengan disponibles incluso si recarga la pestaña en su navegador.
  */
+let filesDatabasePromise = null;
+
 function openFilesDatabase() {
-  return new Promise((resolve) => {
+  // Se reutiliza una sola conexión a IndexedDB durante toda la sesión
+  if (filesDatabasePromise) return filesDatabasePromise;
+
+  filesDatabasePromise = new Promise((resolve) => {
     if (typeof indexedDB === 'undefined') {
       resolve(null);
       return;
     }
     try {
-      const request = indexedDB.open(IDB_CONFIG.dbName, 1);
+      const request = indexedDB.open(IDB_CONFIG.dbName, IDB_CONFIG.dbVersion);
       request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains(IDB_CONFIG.storeName)) {
           db.createObjectStore(IDB_CONFIG.storeName, { keyPath: 'annexId' });
         }
+        // Almacén del histórico de versiones (v2): una fila por cada archivo subido o restaurado
+        if (!db.objectStoreNames.contains(IDB_CONFIG.versionsStoreName)) {
+          const versionsStore = db.createObjectStore(IDB_CONFIG.versionsStoreName, {
+            keyPath: 'versionId',
+            autoIncrement: true,
+          });
+          versionsStore.createIndex('annexId', 'annexId', { unique: false });
+        }
       };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => resolve(null);
+      request.onsuccess = () => {
+        const db = request.result;
+        // Si otra pestaña necesita actualizar el esquema, se libera esta conexión para no bloquearla
+        db.onversionchange = () => {
+          db.close();
+          filesDatabasePromise = null;
+        };
+        resolve(db);
+      };
+      request.onerror = () => {
+        filesDatabasePromise = null;
+        resolve(null);
+      };
     } catch {
+      filesDatabasePromise = null;
       resolve(null);
     }
   });
+  return filesDatabasePromise;
 }
 
 async function saveFileToIndexedDB(annexId, file, ext) {
@@ -411,6 +439,88 @@ async function loadAllFilesFromIndexedDB() {
       resolve([]);
     }
   });
+}
+
+/* ==========================================================================
+   3b. Control de versiones e histórico por anexo (IndexedDB)
+       Cada archivo subido o restaurado queda registrado como una versión
+       numerada (v1, v2, v3…) que se puede ver, descargar, restaurar o eliminar.
+   ========================================================================== */
+
+function idbRequestToPromise(request) {
+  return new Promise((resolve) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => resolve(null);
+  });
+}
+
+function idbTransactionDone(tx) {
+  return new Promise((resolve) => {
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => resolve(false);
+    tx.onabort = () => resolve(false);
+  });
+}
+
+/** Número que corresponde a la siguiente versión de un anexo (máximo existente + 1). */
+function getNextVersionNumber(versions) {
+  if (!Array.isArray(versions)) return 1;
+  return versions.reduce((max, v) => Math.max(max, Number(v && v.numero) || 0), 0) + 1;
+}
+
+/** Devuelve las versiones de un anexo ordenadas de la más reciente a la más antigua. */
+function sortVersionsDescending(versions) {
+  return [...(versions || [])].sort((a, b) => (b.numero || 0) - (a.numero || 0));
+}
+
+async function listVersionsFromIndexedDB(annexId) {
+  const db = await openFilesDatabase();
+  if (!db) return [];
+  try {
+    const tx = db.transaction(IDB_CONFIG.versionsStoreName, 'readonly');
+    const rows = await idbRequestToPromise(tx.objectStore(IDB_CONFIG.versionsStoreName).index('annexId').getAll(annexId));
+    return sortVersionsDescending(Array.isArray(rows) ? rows : []);
+  } catch {
+    return [];
+  }
+}
+
+async function addVersionToIndexedDB(annexId, file, ext, extra = {}) {
+  const db = await openFilesDatabase();
+  if (!db) return null;
+  try {
+    const existing = await listVersionsFromIndexedDB(annexId);
+    const record = {
+      annexId,
+      numero: getNextVersionNumber(existing),
+      file,
+      name: file.name,
+      size: file.size,
+      ext,
+      subidoEn: Date.now(),
+      restauradaDe: extra.restauradaDe || null,
+    };
+    const tx = db.transaction(IDB_CONFIG.versionsStoreName, 'readwrite');
+    const done = idbTransactionDone(tx);
+    const key = await idbRequestToPromise(tx.objectStore(IDB_CONFIG.versionsStoreName).add(record));
+    await done;
+    return key === null ? null : { ...record, versionId: key };
+  } catch {
+    return null;
+  }
+}
+
+async function deleteVersionFromIndexedDB(versionId) {
+  const db = await openFilesDatabase();
+  if (!db) return false;
+  try {
+    const tx = db.transaction(IDB_CONFIG.versionsStoreName, 'readwrite');
+    const done = idbTransactionDone(tx);
+    tx.objectStore(IDB_CONFIG.versionsStoreName).delete(versionId);
+    return await done;
+  } catch {
+    return false;
+  }
 }
 
 /* ==========================================================================
@@ -748,6 +858,10 @@ function initPortfolioApp() {
   const publicUrlInput = document.getElementById('public-url-input');
   const applyPublicUrlBtn = document.getElementById('apply-public-url-btn');
 
+  const versionHistoryList = document.getElementById('version-history-list');
+  const versionHistoryCount = document.getElementById('version-history-count');
+  const versionHistoryEmpty = document.getElementById('version-history-empty');
+
   const previewAnnexCode = document.getElementById('preview-annex-code');
   const previewHeading = document.getElementById('preview-heading');
   const previewEmpty = document.getElementById('preview-empty');
@@ -785,8 +899,12 @@ function initPortfolioApp() {
     activeAnnexId: '1',
     drawerOpen: true,
     zoomPercent: 100,
-    // Mapa en sesión: { [annexId]: { file, name, size, ext, objectUrl, publicUrl, officeEngine } }
+    // Mapa en sesión: { [annexId]: { file, name, size, ext, objectUrl, publicUrl, officeEngine, versionId } }
     sessionFiles: new Map(),
+    // Histórico de versiones por anexo: { [annexId]: [{ versionId, numero, name, size, ext, subidoEn, file }] }
+    versionsByAnnex: new Map(),
+    // Versión antigua que se está previsualizando temporalmente: { annexId, numero, entry }
+    viewingVersion: null,
   };
 
   // Inicializar URLs públicas guardadas en localStorage
@@ -836,12 +954,33 @@ function initPortfolioApp() {
         });
       }
     });
+    // Si hay archivos previos sin histórico, registrarlos como versión 1 y marcar la versión actual
+    ensureInitialVersions().then(() => {
+      if (state.view === 'annexes') {
+        renderVersionHistory();
+      }
+    });
     if (state.view === 'annexes') {
       renderAll();
     } else {
       updateLoadedCounter();
     }
   });
+
+  async function ensureInitialVersions() {
+    for (const [annexId, entry] of state.sessionFiles) {
+      if (!entry.file) continue;
+      let versions = await listVersionsFromIndexedDB(annexId);
+      if (versions.length === 0) {
+        const created = await addVersionToIndexedDB(annexId, entry.file, entry.ext);
+        versions = created ? [created] : [];
+      }
+      state.versionsByAnnex.set(annexId, versions);
+      if (versions.length > 0 && !entry.versionId) {
+        entry.versionId = versions[0].versionId;
+      }
+    }
+  }
 
   function getActiveAnnex() {
     return state.annexes.find((a) => a.id === state.activeAnnexId) || state.annexes[0];
@@ -989,6 +1128,7 @@ function initPortfolioApp() {
           return;
         }
         state.activeAnnexId = annex.id;
+        clearViewingVersion();
         state.zoomPercent = 100;
         state.drawerOpen = true;
         annexDrawer.classList.remove('is-collapsed');
@@ -1049,6 +1189,12 @@ function initPortfolioApp() {
       annex.kind === 'document' && (!attached || !attached.file || getPreviewCategory(attached.ext) === 'office');
     publicUrlBox.hidden = !isOfficeCandidate;
     publicUrlInput.value = attached && attached.publicUrl ? attached.publicUrl : '';
+
+    // Histórico de versiones del anexo activo (se carga desde IndexedDB la primera vez)
+    if (!state.versionsByAnnex.has(annex.id)) {
+      refreshVersions(annex.id);
+    }
+    renderVersionHistory();
   }
 
   /* ------------------------------------------------------------------------
@@ -1063,7 +1209,10 @@ function initPortfolioApp() {
 
   function renderPreview() {
     const annex = getActiveAnnex();
-    const attached = state.sessionFiles.get(annex.id);
+    // Si se está viendo una versión anterior del histórico, se previsualiza esa en lugar de la actual
+    const viewing =
+      state.viewingVersion && state.viewingVersion.annexId === annex.id ? state.viewingVersion : null;
+    const attached = viewing ? viewing.entry : state.sessionFiles.get(annex.id);
 
     previewAnnexCode.textContent = annex.code;
     previewHeading.textContent = annex.title;
@@ -1100,6 +1249,42 @@ function initPortfolioApp() {
 
     const category = getPreviewCategory(attached.ext);
 
+    // Aviso cuando se está viendo una versión anterior del histórico
+    if (viewing) {
+      const banner = document.createElement('div');
+      banner.className = 'version-view-banner';
+
+      const bannerText = document.createElement('span');
+      bannerText.textContent = `Estás viendo la versión v${viewing.numero} (${attached.name}), que no es la versión actual.`;
+
+      const bannerActions = document.createElement('div');
+      bannerActions.className = 'version-view-banner__actions';
+
+      const backBtn = document.createElement('button');
+      backBtn.type = 'button';
+      backBtn.className = 'btn-outline-sm';
+      backBtn.textContent = 'Volver a la versión actual';
+      backBtn.addEventListener('click', () => {
+        clearViewingVersion();
+        renderPreview();
+        renderVersionHistory();
+      });
+
+      const restoreBtn = document.createElement('button');
+      restoreBtn.type = 'button';
+      restoreBtn.className = 'btn-navy-sm';
+      restoreBtn.textContent = 'Restaurar esta versión';
+      restoreBtn.addEventListener('click', () => {
+        const rec = (state.versionsByAnnex.get(annex.id) || []).find((v) => v.numero === viewing.numero);
+        if (rec) restoreVersion(rec);
+      });
+
+      bannerActions.appendChild(backBtn);
+      bannerActions.appendChild(restoreBtn);
+      banner.appendChild(bannerText);
+      banner.appendChild(bannerActions);
+      previewContent.appendChild(banner);
+    }
     // 1. Previsualización de PDF en visor integrado (<iframe> / <embed>)
     if (category === 'pdf') {
       const zoomWrap = document.createElement('div');
@@ -1279,6 +1464,200 @@ function initPortfolioApp() {
     previewContent.appendChild(zoomWrap);
   }
 
+  /* ------------------------------------------------------------------------
+     Control de versiones e histórico del anexo activo
+     ------------------------------------------------------------------------ */
+  function formatVersionDate(timestamp) {
+    try {
+      return new Date(timestamp).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' });
+    } catch {
+      return '';
+    }
+  }
+
+  function clearViewingVersion() {
+    if (state.viewingVersion && state.viewingVersion.entry && state.viewingVersion.entry.objectUrl) {
+      URL.revokeObjectURL(state.viewingVersion.entry.objectUrl);
+    }
+    state.viewingVersion = null;
+  }
+
+  async function refreshVersions(annexId) {
+    const list = await listVersionsFromIndexedDB(annexId);
+    state.versionsByAnnex.set(annexId, list);
+    if (state.activeAnnexId === annexId && state.view === 'annexes') {
+      renderVersionHistory();
+    }
+  }
+
+  function downloadVersion(rec) {
+    const url = URL.createObjectURL(rec.file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = rec.name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  function viewVersion(rec, isCurrent) {
+    clearViewingVersion();
+    if (!isCurrent) {
+      state.viewingVersion = {
+        annexId: rec.annexId,
+        numero: rec.numero,
+        entry: {
+          file: rec.file,
+          name: rec.name,
+          size: rec.size,
+          ext: rec.ext,
+          objectUrl: URL.createObjectURL(rec.file),
+          publicUrl: '',
+          officeEngine: ['docx', 'xlsx', 'pptx'].includes(rec.ext) ? 'local' : 'officeOnline',
+        },
+      };
+    }
+    state.zoomPercent = 100;
+    renderPreview();
+    renderVersionHistory();
+  }
+
+  async function restoreVersion(rec) {
+    clearError();
+    clearViewingVersion();
+
+    const existing = state.sessionFiles.get(rec.annexId);
+    if (existing && existing.objectUrl) {
+      URL.revokeObjectURL(existing.objectUrl);
+    }
+
+    const entry = {
+      file: rec.file,
+      name: rec.name,
+      size: rec.size,
+      ext: rec.ext,
+      objectUrl: URL.createObjectURL(rec.file),
+      publicUrl: existing ? existing.publicUrl : '',
+      officeEngine: ['docx', 'xlsx', 'pptx'].includes(rec.ext) ? 'local' : 'officeOnline',
+      versionId: null,
+    };
+    state.sessionFiles.set(rec.annexId, entry);
+    state.zoomPercent = 100;
+
+    await saveFileToIndexedDB(rec.annexId, rec.file, rec.ext);
+    // La restauración queda registrada como una nueva versión (el histórico nunca se reescribe)
+    const created = await addVersionToIndexedDB(rec.annexId, rec.file, rec.ext, { restauradaDe: rec.numero });
+    if (created) entry.versionId = created.versionId;
+    await refreshVersions(rec.annexId);
+    renderAll();
+  }
+
+  async function deleteVersion(rec) {
+    const confirmed = window.confirm(`¿Eliminar definitivamente la versión v${rec.numero} (${rec.name}) del histórico?`);
+    if (!confirmed) return;
+    if (state.viewingVersion && state.viewingVersion.numero === rec.numero && state.viewingVersion.annexId === rec.annexId) {
+      clearViewingVersion();
+    }
+    await deleteVersionFromIndexedDB(rec.versionId);
+    await refreshVersions(rec.annexId);
+    renderPreview();
+  }
+
+  function renderVersionHistory() {
+    if (!versionHistoryList) return;
+    const annex = getActiveAnnex();
+    const versions = state.versionsByAnnex.get(annex.id) || [];
+    const currentEntry = state.sessionFiles.get(annex.id);
+    const currentVersionId = currentEntry ? currentEntry.versionId : null;
+    const viewingNumero =
+      state.viewingVersion && state.viewingVersion.annexId === annex.id ? state.viewingVersion.numero : null;
+
+    versionHistoryList.innerHTML = '';
+    versionHistoryCount.textContent = `${versions.length} ${versions.length === 1 ? 'versión' : 'versiones'}`;
+    versionHistoryEmpty.hidden = versions.length > 0;
+
+    versions.forEach((rec) => {
+      const isCurrent = currentVersionId !== null && currentVersionId !== undefined && rec.versionId === currentVersionId;
+      const isViewing = viewingNumero === rec.numero;
+
+      const li = document.createElement('li');
+      li.className = `version-item${isCurrent ? ' is-current' : ''}${isViewing ? ' is-viewing' : ''}`;
+
+      const head = document.createElement('div');
+      head.className = 'version-item__head';
+
+      const badge = document.createElement('span');
+      badge.className = 'version-item__badge';
+      badge.textContent = `v${rec.numero}`;
+
+      const name = document.createElement('span');
+      name.className = 'version-item__name';
+      name.textContent = rec.name;
+      name.title = rec.name;
+
+      head.appendChild(badge);
+      head.appendChild(name);
+
+      if (isCurrent) {
+        const tag = document.createElement('span');
+        tag.className = 'version-item__tag';
+        tag.textContent = 'Actual';
+        head.appendChild(tag);
+      } else if (isViewing) {
+        const tag = document.createElement('span');
+        tag.className = 'version-item__tag version-item__tag--viewing';
+        tag.textContent = 'Viendo';
+        head.appendChild(tag);
+      }
+
+      const meta = document.createElement('p');
+      meta.className = 'version-item__meta tabular-nums';
+      const restoredText = rec.restauradaDe ? ` · restaurada de v${rec.restauradaDe}` : '';
+      meta.textContent = `${formatVersionDate(rec.subidoEn)} · ${formatFileSize(rec.size)}${restoredText}`;
+
+      const actions = document.createElement('div');
+      actions.className = 'version-item__actions';
+
+      const viewBtn = document.createElement('button');
+      viewBtn.type = 'button';
+      viewBtn.className = 'btn-ghost-xs';
+      viewBtn.textContent = 'Ver';
+      viewBtn.addEventListener('click', () => viewVersion(rec, isCurrent));
+
+      const downloadBtn = document.createElement('button');
+      downloadBtn.type = 'button';
+      downloadBtn.className = 'btn-ghost-xs';
+      downloadBtn.textContent = 'Descargar';
+      downloadBtn.addEventListener('click', () => downloadVersion(rec));
+
+      actions.appendChild(viewBtn);
+      actions.appendChild(downloadBtn);
+
+      if (!isCurrent) {
+        const restoreBtn = document.createElement('button');
+        restoreBtn.type = 'button';
+        restoreBtn.className = 'btn-ghost-xs';
+        restoreBtn.textContent = 'Restaurar';
+        restoreBtn.addEventListener('click', () => restoreVersion(rec));
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'btn-ghost-xs version-item__delete';
+        deleteBtn.textContent = 'Eliminar';
+        deleteBtn.addEventListener('click', () => deleteVersion(rec));
+
+        actions.appendChild(restoreBtn);
+        actions.appendChild(deleteBtn);
+      }
+
+      li.appendChild(head);
+      li.appendChild(meta);
+      li.appendChild(actions);
+      versionHistoryList.appendChild(li);
+    });
+  }
+
   function renderAll() {
     updateLoadedCounter();
     renderAnnexRail();
@@ -1299,6 +1678,8 @@ function initPortfolioApp() {
       return;
     }
 
+    clearViewingVersion();
+
     const existing = state.sessionFiles.get(annex.id);
     if (existing && existing.objectUrl) {
       URL.revokeObjectURL(existing.objectUrl);
@@ -1309,7 +1690,7 @@ function initPortfolioApp() {
       ? 'local'
       : 'officeOnline';
 
-    state.sessionFiles.set(annex.id, {
+    const newEntry = {
       file,
       name: file.name,
       size: file.size,
@@ -1317,9 +1698,19 @@ function initPortfolioApp() {
       objectUrl,
       publicUrl: existing ? existing.publicUrl : '',
       officeEngine: defaultOfficeEngine,
-    });
+      versionId: null,
+    };
+    state.sessionFiles.set(annex.id, newEntry);
 
     saveFileToIndexedDB(annex.id, file, validation.extension);
+
+    // Control de versiones: cada archivo subido o reemplazado queda como una nueva versión en el histórico
+    addVersionToIndexedDB(annex.id, file, validation.extension)
+      .then((created) => {
+        if (created) newEntry.versionId = created.versionId;
+        return refreshVersions(annex.id);
+      })
+      .catch(() => {});
 
     state.zoomPercent = 100;
     renderAll();
@@ -1327,6 +1718,7 @@ function initPortfolioApp() {
 
   function removeCurrentFile() {
     const annex = getActiveAnnex();
+    clearViewingVersion();
     const existing = state.sessionFiles.get(annex.id);
     if (existing && existing.objectUrl) {
       URL.revokeObjectURL(existing.objectUrl);
@@ -1530,6 +1922,11 @@ globalThis.ADSO_PORTFOLIO = {
   loadPersistedMap,
   savePersistedMap,
   mergeAnnexesWithStorage,
+  getNextVersionNumber,
+  sortVersionsDescending,
+  addVersionToIndexedDB,
+  listVersionsFromIndexedDB,
+  deleteVersionFromIndexedDB,
 };
 
 if (typeof document !== 'undefined') {

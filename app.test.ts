@@ -120,3 +120,17 @@ test('formatFileSize and getPreviewCategory format values cleanly', () => {
   assert.equal(getPreviewCategory('docx'), 'office');
   assert.equal(getPreviewCategory('mp4'), 'video');
 });
+
+test('control de versiones: getNextVersionNumber y sortVersionsDescending ordenan el historico', () => {
+  const { getNextVersionNumber, sortVersionsDescending } = (globalThis as any).ADSO_PORTFOLIO;
+
+  assert.equal(getNextVersionNumber([]), 1);
+  assert.equal(getNextVersionNumber(undefined), 1);
+  assert.equal(getNextVersionNumber([{ numero: 1 }, { numero: 3 }, { numero: 2 }]), 4);
+
+  const sorted = sortVersionsDescending([{ numero: 1 }, { numero: 3 }, { numero: 2 }]);
+  assert.deepEqual(
+    sorted.map((v: { numero: number }) => v.numero),
+    [3, 2, 1]
+  );
+});

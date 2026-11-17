@@ -855,6 +855,140 @@ body {
 }
 
 /* ==========================================================================
+   Control de versiones e histórico por anexo
+   ========================================================================== */
+.version-history-box {
+  padding-top: 10px;
+  border-top: 1px solid var(--border-hairline);
+}
+
+.version-history__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.version-history__count {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--navy-800);
+  background-color: var(--bg-surface-alt);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.version-history__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.version-item {
+  padding: 8px 10px;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface);
+  animation: fadeScaleIn 200ms ease-out;
+}
+
+.version-item.is-current {
+  border-color: var(--sena-green-border);
+  background-color: var(--sena-green-bg);
+}
+
+.version-item.is-viewing {
+  border-color: #93c5fd;
+  background-color: #eff6ff;
+}
+
+.version-item__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.version-item__badge {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: var(--navy-900);
+  padding: 1px 7px;
+  border-radius: 4px;
+}
+
+.version-item__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.version-item__tag {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--sena-green);
+  background-color: #ffffff;
+  border: 1px solid var(--sena-green-border);
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+.version-item__tag--viewing {
+  color: var(--navy-700);
+  border-color: #93c5fd;
+}
+
+.version-item__meta {
+  margin: 3px 0 4px;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+.version-item__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.version-item__delete {
+  color: var(--danger-text);
+}
+
+.version-view-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  background-color: #eff6ff;
+  border: 1px solid #93c5fd;
+  border-radius: var(--radius-sm);
+  color: var(--navy-900);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.version-view-banner__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
    6. COLUMNA DERECHA DE 12 BOTONES AZUL OSCURO DESPLEGABLES
    ========================================================================== */
 .annex-rail {

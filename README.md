@@ -61,6 +61,20 @@ El proyecto está separado en tres archivos principales sin dependencias de fram
 
 ---
 
+## Control de Versiones e Histórico de Archivos
+
+Cada anexo guarda un **histórico de versiones** de sus archivos (en `IndexedDB`, almacén `annex_versions`), visible en el panel desplegable bajo **«Histórico de versiones»**:
+
+- **Cada subida o reemplazo** crea una versión numerada (`v1`, `v2`, `v3`…) con nombre, fecha, hora y tamaño.
+- **Ver:** previsualiza una versión anterior en el área principal (con aviso azul) sin cambiar la versión actual.
+- **Descargar:** descarga cualquier versión del histórico.
+- **Restaurar:** convierte una versión anterior en la actual; queda registrada como una nueva versión («restaurada de vN»), por lo que el histórico nunca se reescribe.
+- **Eliminar** (versión): borra definitivamente una versión no actual del histórico. El botón **Eliminar** del archivo actual solo quita el archivo vigente; sus versiones se conservan y se pueden restaurar.
+- Los archivos que ya estaban cargados antes de esta mejora se registran automáticamente como **v1**.
+- **Limitación:** el histórico vive en el navegador de cada usuario (no se comparte entre dispositivos ni entre usuarios).
+
+---
+
 ## Cómo usar y compartir la página
 
 1. **En línea (para que cualquier persona la use desde cualquier dispositivo):**
