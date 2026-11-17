@@ -24,7 +24,7 @@ const DOCUMENT_EXTENSIONS = ['doc', 'docx', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx']
 const OFFICE_EXTENSIONS = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
 const VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'avi', 'mkv'];
 
-const MAX_DOCUMENT_BYTES = 500 * 1024 * 1024; // 500 MB
+const MAX_DOCUMENT_BYTES = 2048 * 1024 * 1024; // 2048 MB (2 GB) para admitir portafolios y documentos pesados
 const MAX_VIDEO_BYTES = 2048 * 1024 * 1024; // 2048 MB (2 GB)
 
 /**
