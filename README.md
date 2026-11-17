@@ -34,21 +34,22 @@ El proyecto está separado en tres archivos principales sin dependencias de fram
 
 ---
 
-## Los 12 Anexos y Tipos de Archivo
+## Los 13 Anexos Numerados y Tipos de Archivo
 
-- **Anexos A a K** (documentos `.doc`, `.docx`, `.pdf`, hojas de cálculo `.xls`, `.xlsx` y presentaciones `.ppt`, `.pptx`, hasta 25 MB):
-  - **Anexo A.** Planeación de actividades
-  - **Anexo B.** Diagramas de casos de uso
-  - **Anexo C.** Diagramas de actividad
-  - **Anexo D.** Diagrama de dominio
-  - **Anexo E.** Taller de bases de datos
-  - **Anexo F.** Verificación de modelos y elaboración de prototipos
-  - **Anexo G.** Taller general
-  - **Anexo H.** Hardware
-  - **Anexo I.** Licencias
-  - **Anexo J.** Software
-  - **Anexo K.** Recursos humanos
-- **Anexo L (`Anexos Html`)**: acepta **únicamente un archivo de video** (`.mp4`, `.webm`, `.ogg`, `.mov`, `.m4v`, hasta 150 MB) y se reproduce con `<video controls>` y selector de velocidad.
+- **Anexos 1 a 12** (documentos `.doc`, `.docx`, `.pdf`, hojas de cálculo `.xls`, `.xlsx` y presentaciones `.ppt`, `.pptx`, hasta 25 MB):
+  - **Anexo 1.** Planeación de actividades
+  - **Anexo 2.** Diagramas de casos de uso
+  - **Anexo 3.** Diagramas de actividad
+  - **Anexo 4.** Diagrama de dominio
+  - **Anexo 5.** Taller de bases de datos
+  - **Anexo 6.** Verificación de modelos y elaboración de prototipos
+  - **Anexo 7.** Taller general
+  - **Anexo 8.** Hardware
+  - **Anexo 9.** Licencias
+  - **Anexo 10.** Software
+  - **Anexo 11.** Recursos humanos
+  - **Anexo 12.** Portafolio de evidencias
+- **Anexo 13 (`Anexo 13. Anexos Html`)**: acepta **únicamente un archivo de video** (`.mp4`, `.webm`, `.ogg`, `.mov`, `.m4v`, hasta 150 MB) y se reproduce con `<video controls>` y selector de velocidad.
 
 ---
 

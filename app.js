@@ -28,113 +28,142 @@ const MAX_DOCUMENT_BYTES = 25 * 1024 * 1024; // 25 MB
 const MAX_VIDEO_BYTES = 150 * 1024 * 1024; // 150 MB
 
 /**
- * Definición base de los 12 anexos requeridos del programa ADSO (Grupo 8).
- * El último botón (L) acepta únicamente un video y su título por defecto es "Anexos Html".
+ * Mapa de migración automática de anexos con letras (A-L) a numeración (1-13)
+ * para conservar intactos todos los archivos y datos que el usuario ya haya subido.
+ * A..K -> 1..11, y L (video) -> 13 (quedando el 12 para "Portafolio de evidencias").
+ */
+const LEGACY_ID_MAP = {
+  A: '1',
+  B: '2',
+  C: '3',
+  D: '4',
+  E: '5',
+  F: '6',
+  G: '7',
+  H: '8',
+  I: '9',
+  J: '10',
+  K: '11',
+  L: '13',
+};
+
+/**
+ * Definición base de los 13 anexos numerados del programa ADSO (Grupo 8).
+ * Del 1 al 12 aceptan documentos; el 12 es "Portafolio de evidencias" y el 13 acepta únicamente video.
  */
 const DEFAULT_ANNEXES = [
   {
-    id: 'A',
-    code: 'Anexo A',
-    title: 'Anexo A. Planeación de actividades',
+    id: '1',
+    code: 'Anexo 1',
+    title: 'Anexo 1. Planeación de actividades',
     description: 'Cronograma, plan de trabajo, entregables y asignación de tareas del proyecto Échele Camello.',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
   },
   {
-    id: 'B',
-    code: 'Anexo B',
-    title: 'Anexo B. Diagramas de casos de uso',
+    id: '2',
+    code: 'Anexo 2',
+    title: 'Anexo 2. Diagramas de casos de uso',
     description: 'Actores, escenarios principales, flujos alternos y especificaciones de casos de uso del sistema.',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
   },
   {
-    id: 'C',
-    code: 'Anexo C',
-    title: 'Anexo C. Diagramas de actividad',
+    id: '3',
+    code: 'Anexo 3',
+    title: 'Anexo 3. Diagramas de actividad',
     description: 'Modelado de procesos de negocio, flujos de decisión y secuencia operativa de los módulos.',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
   },
   {
-    id: 'D',
-    code: 'Anexo D',
-    title: 'Anexo D. Diagrama de dominio',
+    id: '4',
+    code: 'Anexo 4',
+    title: 'Anexo 4. Diagrama de dominio',
     description: 'Modelo conceptual de entidades, atributos, relaciones y reglas de negocio del dominio.',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
   },
   {
-    id: 'E',
-    code: 'Anexo E',
-    title: 'Anexo E. Taller de bases de datos',
+    id: '5',
+    code: 'Anexo 5',
+    title: 'Anexo 5. Taller de bases de datos',
     description: 'Modelo entidad-relación, diccionario de datos, normalización y scripts de diseño de base de datos.',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
   },
   {
-    id: 'F',
-    code: 'Anexo F',
-    title: 'Anexo F. Verificación de modelos y elaboración de prototipos',
+    id: '6',
+    code: 'Anexo 6',
+    title: 'Anexo 6. Verificación de modelos y elaboración de prototipos',
     description: 'Listas de chequeo de calidad de modelos, trazabilidad y prototipos de interfaz de usuario.',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
   },
   {
-    id: 'G',
-    code: 'Anexo G',
-    title: 'Anexo G. Taller general',
+    id: '7',
+    code: 'Anexo 7',
+    title: 'Anexo 7. Taller general',
     description: 'Evidencias integradoras y ejercicios prácticos transversales desarrollados en la etapa lectiva.',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
   },
   {
-    id: 'H',
-    code: 'Anexo H',
-    title: 'Anexo H. Hardware',
+    id: '8',
+    code: 'Anexo 8',
+    title: 'Anexo 8. Hardware',
     description: 'Especificaciones de infraestructura física, estaciones de trabajo, servidores y requerimientos de red.',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
   },
   {
-    id: 'I',
-    code: 'Anexo I',
-    title: 'Anexo I. Licencias',
+    id: '9',
+    code: 'Anexo 9',
+    title: 'Anexo 9. Licencias',
     description: 'Análisis de licenciamiento de software libre y propietario utilizado en el desarrollo del proyecto.',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
   },
   {
-    id: 'J',
-    code: 'Anexo J',
-    title: 'Anexo J. Software',
+    id: '10',
+    code: 'Anexo 10',
+    title: 'Anexo 10. Software',
     description: 'Inventario de herramientas de desarrollo, entornos, bibliotecas, control de versiones y frameworks.',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
   },
   {
-    id: 'K',
-    code: 'Anexo K',
-    title: 'Anexo K. Recursos humanos',
+    id: '11',
+    code: 'Anexo 11',
+    title: 'Anexo 11. Recursos humanos',
     description: 'Roles del equipo de desarrollo, responsabilidades, matriz RACI y estimación de talento humano.',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
   },
   {
-    id: 'L',
-    code: 'Anexo L',
-    title: 'Anexos Html',
+    id: '12',
+    code: 'Anexo 12',
+    title: 'Anexo 12. Portafolio de evidencias',
+    description: 'Consolidado general y documentación del portafolio de evidencias del proyecto Échele Camello.',
+    kind: 'document',
+    acceptedExtensions: DOCUMENT_EXTENSIONS,
+    maxBytes: MAX_DOCUMENT_BYTES,
+  },
+  {
+    id: '13',
+    code: 'Anexo 13',
+    title: 'Anexo 13. Anexos Html',
     description: 'Video demostrativo de evidencias y recorrido funcional de los anexos HTML del proyecto.',
     kind: 'video',
     acceptedExtensions: VIDEO_EXTENSIONS,
@@ -263,10 +292,49 @@ function savePersistedMap(storage, key, map) {
   }
 }
 
+function normalizeNumberedTitle(id, rawTitle) {
+  if (typeof rawTitle !== 'string') return '';
+  const trimmed = rawTitle.trim();
+  if (!trimmed) return '';
+  if (id === '13' && /^anexos\s+html$/i.test(trimmed)) {
+    return 'Anexo 13. Anexos Html';
+  }
+  return trimmed.replace(/^Anexo\s+[A-L]\b\.?\s*/i, `Anexo ${id}. `);
+}
+
+function migrateLegacyStorageMap(map, isTitleMap = false) {
+  if (!map || typeof map !== 'object') return false;
+  let changed = false;
+  Object.entries(LEGACY_ID_MAP).forEach(([legacyKey, newId]) => {
+    if (typeof map[legacyKey] === 'string' && map[legacyKey].trim()) {
+      if (!map[newId]) {
+        map[newId] = isTitleMap ? normalizeNumberedTitle(newId, map[legacyKey]) : map[legacyKey];
+      }
+      delete map[legacyKey];
+      changed = true;
+    }
+  });
+  if (isTitleMap) {
+    Object.keys(map).forEach((k) => {
+      const normalized = normalizeNumberedTitle(k, map[k]);
+      if (normalized !== map[k]) {
+        map[k] = normalized;
+        changed = true;
+      }
+    });
+  }
+  return changed;
+}
+
 function mergeAnnexesWithStorage(baseAnnexes, titlesMap, descriptionsMap) {
+  const safeTitles = { ...(titlesMap || {}) };
+  const safeDescs = { ...(descriptionsMap || {}) };
+  migrateLegacyStorageMap(safeTitles, true);
+  migrateLegacyStorageMap(safeDescs, false);
+
   return baseAnnexes.map((item) => {
-    const customTitle = typeof titlesMap[item.id] === 'string' ? titlesMap[item.id].trim() : '';
-    const customDesc = typeof descriptionsMap[item.id] === 'string' ? descriptionsMap[item.id].trim() : '';
+    const customTitle = typeof safeTitles[item.id] === 'string' ? safeTitles[item.id].trim() : '';
+    const customDesc = typeof safeDescs[item.id] === 'string' ? safeDescs[item.id].trim() : '';
     return {
       ...item,
       title: customTitle || item.title,
@@ -701,10 +769,20 @@ function initPortfolioApp() {
   const descriptionsMap = loadPersistedMap(window.localStorage, STORAGE_KEYS.descriptions);
   const publicUrlsMap = loadPersistedMap(window.localStorage, STORAGE_KEYS.publicUrls);
 
+  if (migrateLegacyStorageMap(titlesMap, true)) {
+    savePersistedMap(window.localStorage, STORAGE_KEYS.titles, titlesMap);
+  }
+  if (migrateLegacyStorageMap(descriptionsMap, false)) {
+    savePersistedMap(window.localStorage, STORAGE_KEYS.descriptions, descriptionsMap);
+  }
+  if (migrateLegacyStorageMap(publicUrlsMap, false)) {
+    savePersistedMap(window.localStorage, STORAGE_KEYS.publicUrls, publicUrlsMap);
+  }
+
   const state = {
     view: 'cover',
     annexes: mergeAnnexesWithStorage(DEFAULT_ANNEXES, titlesMap, descriptionsMap),
-    activeAnnexId: 'A',
+    activeAnnexId: '1',
     drawerOpen: true,
     zoomPercent: 100,
     // Mapa en sesión: { [annexId]: { file, name, size, ext, objectUrl, publicUrl, officeEngine } }
@@ -712,8 +790,9 @@ function initPortfolioApp() {
   };
 
   // Inicializar URLs públicas guardadas en localStorage
-  Object.keys(publicUrlsMap).forEach((annexId) => {
-    const urlVal = publicUrlsMap[annexId];
+  Object.keys(publicUrlsMap).forEach((rawAnnexId) => {
+    const annexId = LEGACY_ID_MAP[rawAnnexId] || String(rawAnnexId);
+    const urlVal = publicUrlsMap[rawAnnexId];
     if (typeof urlVal === 'string' && buildOfficeViewerUrls(urlVal)) {
       state.sessionFiles.set(annexId, {
         file: null,
@@ -727,21 +806,33 @@ function initPortfolioApp() {
     }
   });
 
-  // Restaurar archivos guardados en IndexedDB del navegador
+  // Restaurar archivos guardados en IndexedDB del navegador (migrando automáticamente A..L -> 1..13)
   loadAllFilesFromIndexedDB().then((records) => {
     if (!records || records.length === 0) return;
     records.forEach((rec) => {
       if (rec && rec.annexId && rec.file) {
+        const mappedId = LEGACY_ID_MAP[rec.annexId] || String(rec.annexId);
+        // Si el registro venía con clave antigua (A..L), respaldarlo con su nuevo número (1..13) y limpiar la clave antigua
+        if (rec.annexId !== mappedId) {
+          saveFileToIndexedDB(mappedId, rec.file, rec.ext || getFileExtension(rec.file.name)).then(() => {
+            deleteFileFromIndexedDB(rec.annexId);
+          });
+        }
+        const existingInSession = state.sessionFiles.get(mappedId);
+        if (existingInSession && existingInSession.file && rec.annexId !== mappedId) {
+          return;
+        }
         const objectUrl = URL.createObjectURL(rec.file);
-        const prev = state.sessionFiles.get(rec.annexId);
-        state.sessionFiles.set(rec.annexId, {
+        const prev = state.sessionFiles.get(mappedId);
+        const ext = rec.ext || getFileExtension(rec.file.name);
+        state.sessionFiles.set(mappedId, {
           file: rec.file,
           name: rec.name || rec.file.name,
           size: rec.size || rec.file.size,
-          ext: rec.ext || getFileExtension(rec.file.name),
+          ext,
           objectUrl,
           publicUrl: prev ? prev.publicUrl : '',
-          officeEngine: ['docx', 'xlsx', 'pptx'].includes(rec.ext) ? 'local' : 'officeOnline',
+          officeEngine: ['docx', 'xlsx', 'pptx'].includes(ext) ? 'local' : 'officeOnline',
         });
       }
     });
@@ -1244,6 +1335,11 @@ function initPortfolioApp() {
     delete publicUrlsMap[annex.id];
     savePersistedMap(window.localStorage, STORAGE_KEYS.publicUrls, publicUrlsMap);
     deleteFileFromIndexedDB(annex.id);
+    Object.entries(LEGACY_ID_MAP).forEach(([legacyKey, newId]) => {
+      if (newId === annex.id) {
+        deleteFileFromIndexedDB(legacyKey);
+      }
+    });
     fileInput.value = '';
     clearError();
     renderAll();
@@ -1419,6 +1515,7 @@ function initPortfolioApp() {
 // Exponer utilidades para pruebas automatizadas sin requerir sintaxis export (compatible con file:// y servidores)
 globalThis.ADSO_PORTFOLIO = {
   STORAGE_KEYS,
+  LEGACY_ID_MAP,
   DOCUMENT_EXTENSIONS,
   OFFICE_EXTENSIONS,
   VIDEO_EXTENSIONS,
