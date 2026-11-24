@@ -10,9 +10,10 @@
    ========================================================================== */
 
 const STORAGE_KEYS = {
-  titles: 'adso_portafolio_annex_titles_v1',
-  descriptions: 'adso_portafolio_annex_descriptions_v1',
+  titles: 'adso_portafolio_annex_titles_v2',
+  descriptions: 'adso_portafolio_annex_descriptions_v2',
   publicUrls: 'adso_portafolio_annex_public_urls_v1',
+  pages: 'adso_portafolio_annex_pages_v1',
 };
 
 const IDB_CONFIG = {
@@ -51,126 +52,156 @@ const LEGACY_ID_MAP = {
 };
 
 /**
- * Definición base de los 13 anexos numerados del programa ADSO (Grupo 8).
- * Del 1 al 12 aceptan documentos; el 12 es "Portafolio de evidencias" y el 13 acepta únicamente video.
+ * Definición fija del video de presentación al inicio de la página (conserva ID '13' de IndexedDB).
+ */
+const PRESENTATION_VIDEO_ANNEX = {
+  id: '13',
+  code: 'Video',
+  title: 'Video de presentación — Échele Camello',
+  description: '',
+  kind: 'video',
+  acceptedExtensions: VIDEO_EXTENSIONS,
+  maxBytes: MAX_VIDEO_BYTES,
+  subtitles: [],
+};
+
+/**
+ * Estructura fija oficial del portafolio (1 a 11 con sus subtítulos exactos + Anexos).
+ * Conserva IDs '1'..'12' para mantener intactos todos los archivos ya guardados en IndexedDB.
  */
 const DEFAULT_ANNEXES = [
   {
     id: '1',
-    code: 'Anexo 1',
-    title: 'Anexo 1. Planeación de actividades',
-    description: 'Cronograma, plan de trabajo, entregables y asignación de tareas del proyecto Échele Camello.',
+    code: '1',
+    title: '1. Planeación de actividades',
+    description: '',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
+    subtitles: [],
   },
   {
     id: '2',
-    code: 'Anexo 2',
-    title: 'Anexo 2. Diagramas de casos de uso',
-    description: 'Actores, escenarios principales, flujos alternos y especificaciones de casos de uso del sistema.',
+    code: '2',
+    title: '2. Diagramas de casos de uso',
+    description: '',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
+    subtitles: [],
   },
   {
     id: '3',
-    code: 'Anexo 3',
-    title: 'Anexo 3. Diagramas de actividad',
-    description: 'Modelado de procesos de negocio, flujos de decisión y secuencia operativa de los módulos.',
+    code: '3',
+    title: '3. Diagramas de actividad',
+    description: '',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
+    subtitles: [],
   },
   {
     id: '4',
-    code: 'Anexo 4',
-    title: 'Anexo 4. Diagrama de dominio',
-    description: 'Modelo conceptual de entidades, atributos, relaciones y reglas de negocio del dominio.',
+    code: '4',
+    title: '4. Diagrama de dominio',
+    description: '',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
+    subtitles: [],
   },
   {
     id: '5',
-    code: 'Anexo 5',
-    title: 'Anexo 5. Taller de bases de datos',
-    description: 'Modelo entidad-relación, diccionario de datos, normalización y scripts de diseño de base de datos.',
+    code: '5',
+    title: '5. Taller de bases de datos',
+    description: '',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
+    subtitles: [],
   },
   {
     id: '6',
-    code: 'Anexo 6',
-    title: 'Anexo 6. Verificación de modelos y elaboración de prototipos',
-    description: 'Listas de chequeo de calidad de modelos, trazabilidad y prototipos de interfaz de usuario.',
+    code: '6',
+    title: '6. Verificación de modelos y elaboración de prototipos',
+    description: '',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
+    subtitles: [
+      { id: '6.1', title: '6.1 Revisión de los modelos de análisis' },
+      { id: '6.2', title: '6.2 Elaboración de prototipos' },
+    ],
   },
   {
     id: '7',
-    code: 'Anexo 7',
-    title: 'Anexo 7. Taller general',
-    description: 'Evidencias integradoras y ejercicios prácticos transversales desarrollados en la etapa lectiva.',
+    code: '7',
+    title: '7. Taller general',
+    description: '',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
+    subtitles: [],
   },
   {
     id: '8',
-    code: 'Anexo 8',
-    title: 'Anexo 8. Hardware',
-    description: 'Especificaciones de infraestructura física, estaciones de trabajo, servidores y requerimientos de red.',
+    code: '8',
+    title: '8. Hardware',
+    description: '',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
+    subtitles: [
+      { id: '8.1', title: '8.1 Comparación de equipos y especificaciones' },
+      { id: '8.2', title: '8.2 Selección y justificación de los equipos' },
+    ],
   },
   {
     id: '9',
-    code: 'Anexo 9',
-    title: 'Anexo 9. Licencias',
-    description: 'Análisis de licenciamiento de software libre y propietario utilizado en el desarrollo del proyecto.',
+    code: '9',
+    title: '9. Licencias',
+    description: '',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
+    subtitles: [],
   },
   {
     id: '10',
-    code: 'Anexo 10',
-    title: 'Anexo 10. Software',
-    description: 'Inventario de herramientas de desarrollo, entornos, bibliotecas, control de versiones y frameworks.',
+    code: '10',
+    title: '10. Software',
+    description: '',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
+    subtitles: [
+      { id: '10.1', title: '10.1 Comparación y cotización de tecnologías' },
+      { id: '10.2', title: '10.2 Selección y justificación de herramientas' },
+    ],
   },
   {
     id: '11',
-    code: 'Anexo 11',
-    title: 'Anexo 11. Recursos humanos',
-    description: 'Roles del equipo de desarrollo, responsabilidades, matriz RACI y estimación de talento humano.',
+    code: '11',
+    title: '11. Recursos humanos',
+    description: '',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
+    subtitles: [
+      { id: '11.1', title: '11.1 Metodología de trabajo y justificación' },
+      { id: '11.2', title: '11.2 Asignación de roles y tiempos' },
+      { id: '11.3', title: '11.3 Diagrama de Gantt y estimación de costos' },
+    ],
   },
   {
     id: '12',
-    code: 'Anexo 12',
-    title: 'Anexo 12. Portafolio de evidencias',
-    description: 'Consolidado general y documentación del portafolio de evidencias del proyecto Échele Camello.',
+    code: 'Anexos',
+    title: 'Anexos',
+    description: '',
     kind: 'document',
     acceptedExtensions: DOCUMENT_EXTENSIONS,
     maxBytes: MAX_DOCUMENT_BYTES,
-  },
-  {
-    id: '13',
-    code: 'Anexo 13',
-    title: 'Anexo 13. Anexos Html',
-    description: 'Video demostrativo de evidencias y recorrido funcional de los anexos HTML del proyecto.',
-    kind: 'video',
-    acceptedExtensions: VIDEO_EXTENSIONS,
-    maxBytes: MAX_VIDEO_BYTES,
+    subtitles: [],
   },
 ];
 
@@ -699,6 +730,11 @@ function findReferencedMediaPaths(xmlNode, relMap, mediaUrls) {
     }
   });
   return found;
+}
+
+function getPageLabel(pagesMap, itemId) {
+  const raw = pagesMap && typeof pagesMap[itemId] === 'string' ? pagesMap[itemId].trim() : '';
+  return raw ? `Pág. ${raw}` : 'Pág. ___';
 }
 
 function createEmbeddedImageFigure(blobUrl, captionText) {
@@ -1246,13 +1282,29 @@ async function renderLocalOfficePreview(file, ext, container) {
    ========================================================================== */
 
 function initPortfolioApp() {
-  const coverScreen = document.getElementById('cover-screen');
-  const annexesScreen = document.getElementById('annexes-screen');
-  const enterPortfolioBtn = document.getElementById('enter-portfolio-btn');
-  const backToCoverBtn = document.getElementById('back-to-cover-btn');
   const resetNamesBtn = document.getElementById('reset-names-btn');
   const loadedCounterEl = document.getElementById('loaded-counter');
 
+  // Video de presentación al inicio de la página
+  const heroVideoDropzone = document.getElementById('hero-video-dropzone');
+  const heroVideoEmpty = document.getElementById('hero-video-empty');
+  const heroVideoPlayer = document.getElementById('hero-video-player');
+  const heroVideoInput = document.getElementById('hero-video-input');
+  const heroVideoUploadBtn = document.getElementById('hero-video-upload-btn');
+  const heroVideoEmptyBtn = document.getElementById('hero-video-empty-btn');
+  const heroVideoDownloadLink = document.getElementById('hero-video-download-link');
+  const heroVideoRemoveBtn = document.getElementById('hero-video-remove-btn');
+  const heroVideoFilename = document.getElementById('hero-video-filename');
+  const heroVideoSpeeds = document.getElementById('hero-video-speeds');
+  const heroVideoError = document.getElementById('hero-video-error');
+
+  // Modal portada institucional
+  const coverModal = document.getElementById('cover-modal');
+  const openCoverModalBtn = document.getElementById('open-cover-modal-btn');
+  const closeCoverModalBtn = document.getElementById('close-cover-modal-btn');
+  const enterPortfolioBtn = document.getElementById('enter-portfolio-btn');
+
+  // Compartir / Importar
   const sharePortfolioBtn = document.getElementById('share-portfolio-btn');
   const importPackageBtn = document.getElementById('import-package-btn');
   const importPackageInput = document.getElementById('import-package-input');
@@ -1261,6 +1313,21 @@ function initPortfolioApp() {
   const exportPackageBtn = document.getElementById('export-package-btn');
   const exportManifestBtn = document.getElementById('export-manifest-btn');
   const shareStatusMsg = document.getElementById('share-status-msg');
+
+  // Lightbox para ampliación de imágenes al hacer clic
+  const imageLightbox = document.getElementById('image-lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+  const lightboxCaption = document.getElementById('lightbox-caption');
+  const lightboxZoomIn = document.getElementById('lightbox-zoom-in');
+  const lightboxZoomOut = document.getElementById('lightbox-zoom-out');
+  const lightboxZoomReset = document.getElementById('lightbox-zoom-reset');
+  const lightboxZoomLabel = document.getElementById('lightbox-zoom-label');
+  const lightboxCloseBtn = document.getElementById('lightbox-close-btn');
+
+  // Espacio de trabajo del portafolio
+  const workspaceGrid = document.getElementById('workspace-grid');
+  const projectionModeBtn = document.getElementById('projection-mode-btn');
+  const projectionModeLabel = document.getElementById('projection-mode-label');
 
   const annexButtonsList = document.getElementById('annex-buttons-list');
   const annexDrawer = document.getElementById('annex-drawer');
@@ -1274,6 +1341,8 @@ function initPortfolioApp() {
   const annexTitleInput = document.getElementById('annex-title-input');
   const saveTitleBtn = document.getElementById('save-title-btn');
   const titleSaveStatus = document.getElementById('title-save-status');
+  const annexPageInput = document.getElementById('annex-page-input');
+  const subtitlesPagesBox = document.getElementById('subtitles-pages-box');
   const annexDescInput = document.getElementById('annex-desc-input');
 
   const dropzone = document.getElementById('dropzone');
@@ -1300,9 +1369,13 @@ function initPortfolioApp() {
   const versionHistoryEmpty = document.getElementById('version-history-empty');
 
   const previewAnnexCode = document.getElementById('preview-annex-code');
+  const previewPageBadge = document.getElementById('preview-page-badge');
   const previewHeading = document.getElementById('preview-heading');
+  const previewSubtitlesList = document.getElementById('preview-subtitles-list');
   const previewEmpty = document.getElementById('preview-empty');
+  const previewEmptyTitle = document.getElementById('preview-empty-title');
   const previewEmptyHint = document.getElementById('preview-empty-hint');
+  const previewEmptySubtitles = document.getElementById('preview-empty-subtitles');
   const previewContent = document.getElementById('preview-content');
   const previewOpenTabLink = document.getElementById('preview-open-tab-link');
   const previewDownloadLink = document.getElementById('preview-download-link');
@@ -1313,12 +1386,13 @@ function initPortfolioApp() {
   const zoomResetBtn = document.getElementById('zoom-reset-btn');
   const zoomLevelLabel = document.getElementById('zoom-level-label');
 
-  if (!coverScreen || !annexesScreen) return;
+  if (!annexButtonsList || !previewContent) return;
 
   // Estado persistente y de sesión
   const titlesMap = loadPersistedMap(window.localStorage, STORAGE_KEYS.titles);
   const descriptionsMap = loadPersistedMap(window.localStorage, STORAGE_KEYS.descriptions);
   const publicUrlsMap = loadPersistedMap(window.localStorage, STORAGE_KEYS.publicUrls);
+  const pagesMap = loadPersistedMap(window.localStorage, STORAGE_KEYS.pages);
 
   if (migrateLegacyStorageMap(titlesMap, true)) {
     savePersistedMap(window.localStorage, STORAGE_KEYS.titles, titlesMap);
@@ -1331,16 +1405,18 @@ function initPortfolioApp() {
   }
 
   const state = {
-    view: 'cover',
+    view: 'annexes',
     annexes: mergeAnnexesWithStorage(DEFAULT_ANNEXES, titlesMap, descriptionsMap),
     activeAnnexId: '1',
     drawerOpen: true,
+    projectionMode: false,
     zoomPercent: 100,
+    lightboxZoomPercent: 100,
     // Mapa en sesión: { [annexId]: { file, name, size, ext, objectUrl, publicUrl, officeEngine, versionId } }
     sessionFiles: new Map(),
-    // Histórico de versiones por anexo: { [annexId]: [{ versionId, numero, name, size, ext, subidoEn, file }] }
+    // Histórico de versiones por anexo
     versionsByAnnex: new Map(),
-    // Versión antigua que se está previsualizando temporalmente: { annexId, numero, entry }
+    // Versión antigua en previsualización temporal
     viewingVersion: null,
   };
 
@@ -1427,7 +1503,10 @@ function initPortfolioApp() {
     manifest.annexes.forEach((item) => {
       if (!item || !item.id) return;
       const annexId = String(item.id);
-      const annexObj = state.annexes.find((a) => a.id === annexId);
+      const annexObj =
+        annexId === PRESENTATION_VIDEO_ANNEX.id
+          ? PRESENTATION_VIDEO_ANNEX
+          : state.annexes.find((a) => a.id === annexId);
       if (!annexObj) return;
 
       if (typeof item.title === 'string' && item.title.trim() && !titlesMap[annexId]) {
@@ -1463,11 +1542,7 @@ function initPortfolioApp() {
     });
 
     if (changed) {
-      if (state.view === 'annexes') {
-        renderAll();
-      } else {
-        updateLoadedCounter();
-      }
+      renderAll();
     }
   }
 
@@ -1501,7 +1576,7 @@ function initPortfolioApp() {
       entry.size = loadedFile.size || entry.size;
       entry.objectUrl = URL.createObjectURL(loadedFile);
       entry.loadingPublished = false;
-      if (state.activeAnnexId === annexId && state.view === 'annexes') {
+      if (state.activeAnnexId === annexId || annexId === PRESENTATION_VIDEO_ANNEX.id) {
         renderAll();
       }
     } catch {
@@ -1536,31 +1611,142 @@ function initPortfolioApp() {
   }
 
   function showView(viewName) {
-    state.view = viewName;
-    if (viewName === 'annexes') {
-      coverScreen.hidden = true;
-      annexesScreen.hidden = false;
-      renderAll();
-    } else {
-      annexesScreen.hidden = true;
-      coverScreen.hidden = false;
-      coverScreen.classList.remove('is-entering');
-      void coverScreen.offsetWidth;
-      coverScreen.classList.add('is-entering');
-    }
+    state.view = viewName || 'annexes';
+    renderAll();
   }
 
   function setDrawerOpen(isOpen) {
     state.drawerOpen = isOpen;
-    annexDrawer.classList.toggle('is-collapsed', !isOpen);
-    toggleDrawerBtn.setAttribute('aria-expanded', String(isOpen));
-    toggleDrawerLabel.textContent = isOpen ? 'Ocultar panel' : 'Desplegar panel';
+    if (annexDrawer) annexDrawer.classList.toggle('is-collapsed', !isOpen);
+    if (toggleDrawerBtn) toggleDrawerBtn.setAttribute('aria-expanded', String(isOpen));
+    if (toggleDrawerLabel) toggleDrawerLabel.textContent = isOpen ? 'Ocultar panel' : 'Desplegar panel';
     renderAnnexRail();
   }
 
+  function setProjectionMode(enabled) {
+    state.projectionMode = Boolean(enabled);
+    if (workspaceGrid) workspaceGrid.classList.toggle('is-projection-mode', state.projectionMode);
+    if (projectionModeBtn) {
+      projectionModeBtn.setAttribute('aria-pressed', String(state.projectionMode));
+      projectionModeBtn.classList.toggle('is-active', state.projectionMode);
+    }
+    if (projectionModeLabel) {
+      projectionModeLabel.textContent = state.projectionMode ? 'Salir de proyección' : 'Modo proyección';
+    }
+  }
+
+  function applyLightboxZoom() {
+    if (!lightboxImg || !lightboxZoomLabel) return;
+    lightboxImg.style.transform = `scale(${state.lightboxZoomPercent / 100})`;
+    lightboxZoomLabel.textContent = `${state.lightboxZoomPercent}%`;
+  }
+
+  function openImageLightbox(src, caption) {
+    if (!imageLightbox || !lightboxImg || !src) return;
+    state.lightboxZoomPercent = 100;
+    lightboxImg.src = src;
+    lightboxImg.alt = caption || 'Imagen ampliada';
+    if (lightboxCaption) lightboxCaption.textContent = caption || 'Imagen ampliada';
+    applyLightboxZoom();
+    imageLightbox.hidden = false;
+  }
+
+  function closeImageLightbox() {
+    if (!imageLightbox) return;
+    imageLightbox.hidden = true;
+    if (lightboxImg) lightboxImg.src = '';
+  }
+
   function updateLoadedCounter() {
-    const count = state.sessionFiles.size;
-    loadedCounterEl.textContent = `${count} de ${state.annexes.length} anexos cargados`;
+    const loadedSections = state.annexes.filter((a) => state.sessionFiles.has(a.id)).length;
+    if (loadedCounterEl) {
+      loadedCounterEl.textContent = `${loadedSections} de ${state.annexes.length} con archivo`;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Renderizado del Video de Presentación al inicio de la página
+     ------------------------------------------------------------------------ */
+  function renderHeroVideo() {
+    if (!heroVideoPlayer || !heroVideoEmpty) return;
+    const videoEntry = state.sessionFiles.get(PRESENTATION_VIDEO_ANNEX.id);
+    const videoSrc = videoEntry ? videoEntry.objectUrl || videoEntry.publishedPath || videoEntry.publicUrl : '';
+
+    if (videoEntry && videoEntry.publishedPath && !videoEntry.file) {
+      ensurePublishedFileLoaded(PRESENTATION_VIDEO_ANNEX.id, videoEntry);
+    }
+
+    if (videoSrc) {
+      heroVideoEmpty.hidden = true;
+      heroVideoPlayer.hidden = false;
+      if (heroVideoPlayer.getAttribute('src') !== videoSrc) {
+        heroVideoPlayer.setAttribute('src', videoSrc);
+      }
+      if (heroVideoFilename) {
+        heroVideoFilename.textContent = `${videoEntry.name} (${formatFileSize(videoEntry.size)})`;
+      }
+      if (heroVideoSpeeds) heroVideoSpeeds.hidden = false;
+      if (heroVideoDownloadLink) {
+        heroVideoDownloadLink.hidden = false;
+        heroVideoDownloadLink.href = videoSrc;
+        heroVideoDownloadLink.setAttribute('download', videoEntry.name || 'presentacion-echele-camello.mp4');
+      }
+      if (heroVideoRemoveBtn) heroVideoRemoveBtn.hidden = false;
+    } else {
+      heroVideoPlayer.pause();
+      heroVideoPlayer.removeAttribute('src');
+      heroVideoPlayer.hidden = true;
+      heroVideoEmpty.hidden = false;
+      if (heroVideoFilename) heroVideoFilename.textContent = 'Pendiente por adjuntar';
+      if (heroVideoSpeeds) heroVideoSpeeds.hidden = true;
+      if (heroVideoDownloadLink) heroVideoDownloadLink.hidden = true;
+      if (heroVideoRemoveBtn) heroVideoRemoveBtn.hidden = true;
+    }
+  }
+
+  function handleHeroVideoFile(file) {
+    if (heroVideoError) {
+      heroVideoError.hidden = true;
+      heroVideoError.textContent = '';
+    }
+    const validation = validateFileForAnnex(PRESENTATION_VIDEO_ANNEX, file);
+    if (!validation.valid) {
+      if (heroVideoError) {
+        heroVideoError.textContent = validation.error;
+        heroVideoError.hidden = false;
+      }
+      return;
+    }
+    const existing = state.sessionFiles.get(PRESENTATION_VIDEO_ANNEX.id);
+    if (existing && existing.objectUrl) URL.revokeObjectURL(existing.objectUrl);
+
+    const objectUrl = URL.createObjectURL(file);
+    state.sessionFiles.set(PRESENTATION_VIDEO_ANNEX.id, {
+      file,
+      name: file.name,
+      size: file.size,
+      ext: validation.extension,
+      objectUrl,
+      publicUrl: '',
+      officeEngine: 'video',
+      versionId: null,
+    });
+    saveFileToIndexedDB(PRESENTATION_VIDEO_ANNEX.id, file, validation.extension);
+    addVersionToIndexedDB(PRESENTATION_VIDEO_ANNEX.id, file, validation.extension).catch(() => {});
+    renderHeroVideo();
+  }
+
+  function removeHeroVideoFile() {
+    const existing = state.sessionFiles.get(PRESENTATION_VIDEO_ANNEX.id);
+    if (existing && existing.objectUrl) URL.revokeObjectURL(existing.objectUrl);
+    state.sessionFiles.delete(PRESENTATION_VIDEO_ANNEX.id);
+    deleteFileFromIndexedDB(PRESENTATION_VIDEO_ANNEX.id);
+    if (heroVideoInput) heroVideoInput.value = '';
+    if (heroVideoError) {
+      heroVideoError.hidden = true;
+      heroVideoError.textContent = '';
+    }
+    renderHeroVideo();
   }
 
   function clearError() {
@@ -1574,30 +1760,26 @@ function initPortfolioApp() {
   }
 
   /* ------------------------------------------------------------------------
-     Renderizado de la columna derecha de 12 botones azul oscuro desplegables
+     Renderizado del índice lateral derecho (estructura fija 1–11 + Anexos)
      ------------------------------------------------------------------------ */
   function renderAnnexRail() {
     annexButtonsList.innerHTML = '';
 
-    state.annexes.forEach((annex, index) => {
+    state.annexes.forEach((annex) => {
       const li = document.createElement('li');
       li.className = 'annex-rail__item';
-      li.style.animationDelay = `${index * 25}ms`;
 
       const btn = document.createElement('button');
       const attached = state.sessionFiles.get(annex.id);
-      const hasFile = Boolean(attached && (attached.objectUrl || attached.publicUrl));
+      const hasFile = Boolean(attached && (attached.objectUrl || attached.publicUrl || attached.publishedPath));
       const isActive = annex.id === state.activeAnnexId;
-      const isDeployed = isActive && state.drawerOpen;
 
       btn.type = 'button';
-      btn.className = `annex-btn${isActive ? ' is-active' : ''}${isDeployed ? ' is-deployed' : ' is-collapsed'}${hasFile ? ' has-file' : ''}`;
+      btn.className = `annex-btn${isActive ? ' is-active' : ''}${hasFile ? ' has-file' : ''}`;
       btn.dataset.annexId = annex.id;
       btn.setAttribute('aria-current', isActive ? 'true' : 'false');
-      btn.setAttribute('aria-expanded', isDeployed ? 'true' : 'false');
-      btn.setAttribute('aria-label', `${annex.title}${hasFile ? ' (archivo cargado)' : ''}`);
+      btn.setAttribute('aria-label', `${annex.title}${hasFile ? ' (archivo cargado)' : ' (pendiente)'}`);
 
-      // Fila principal del botón
       const topRow = document.createElement('span');
       topRow.className = 'annex-btn__top';
 
@@ -1606,7 +1788,7 @@ function initPortfolioApp() {
 
       const codeSpan = document.createElement('span');
       codeSpan.className = 'annex-btn__code';
-      codeSpan.textContent = annex.id;
+      codeSpan.textContent = annex.id === '12' ? 'Anx' : annex.id;
 
       const labelSpan = document.createElement('span');
       labelSpan.className = 'annex-btn__label';
@@ -1618,68 +1800,62 @@ function initPortfolioApp() {
       const rightSpan = document.createElement('span');
       rightSpan.className = 'annex-btn__right';
 
+      const pageSpan = document.createElement('span');
+      pageSpan.className = 'annex-btn__page tabular-nums';
+      pageSpan.textContent = getPageLabel(pagesMap, annex.id);
+
       const statusSpan = document.createElement('span');
       statusSpan.className = 'annex-btn__status';
-      if (hasFile) {
-        statusSpan.textContent = attached.ext ? `.${attached.ext.toUpperCase()}` : 'Cargado';
-      } else if (annex.kind === 'video') {
-        statusSpan.textContent = 'Video';
-      } else {
-        statusSpan.textContent = 'Doc';
-      }
+      statusSpan.textContent = hasFile
+        ? attached.ext
+          ? `.${attached.ext.toUpperCase()}`
+          : 'Cargado'
+        : 'Pendiente';
 
-      const chevronSpan = document.createElement('span');
-      chevronSpan.className = 'annex-btn__chevron';
-      chevronSpan.setAttribute('aria-hidden', 'true');
-      chevronSpan.innerHTML =
-        '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 5l-5 5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-
+      rightSpan.appendChild(pageSpan);
       rightSpan.appendChild(statusSpan);
-      rightSpan.appendChild(chevronSpan);
 
       topRow.appendChild(mainSpan);
       topRow.appendChild(rightSpan);
-
-      // Sub-fila desplegable del botón activo
-      const collapseWrap = document.createElement('span');
-      collapseWrap.className = 'annex-btn__collapse';
-      const collapseInner = document.createElement('span');
-      collapseInner.className = 'annex-btn__collapse-inner';
-
-      const subText = document.createElement('span');
-      if (hasFile) {
-        subText.textContent = `Archivo: ${attached.name}`;
-      } else if (annex.kind === 'video') {
-        subText.textContent = 'Panel desplegado · Acepta solo video';
-      } else {
-        subText.textContent = 'Panel desplegado · Pulsa de nuevo para replegar';
-      }
-      collapseInner.appendChild(subText);
-      collapseWrap.appendChild(collapseInner);
-
       btn.appendChild(topRow);
-      btn.appendChild(collapseWrap);
 
-      // Al pulsar el botón: si ya está activo, despliega/repliega el panel; si es otro, cambia y despliega con animación
+      // Subtítulos exactos cuando el apartado los tiene (6.1/6.2, 8.1/8.2, 10.1/10.2, 11.1/11.2/11.3)
+      if (Array.isArray(annex.subtitles) && annex.subtitles.length > 0) {
+        const subList = document.createElement('ul');
+        subList.className = 'annex-btn__subtitles';
+        annex.subtitles.forEach((sub) => {
+          const subLi = document.createElement('li');
+          const subTitle = document.createElement('span');
+          subTitle.textContent = sub.title;
+          const subPage = document.createElement('span');
+          subPage.className = 'tabular-nums';
+          subPage.textContent = getPageLabel(pagesMap, sub.id);
+          subLi.appendChild(subTitle);
+          subLi.appendChild(subPage);
+          subList.appendChild(subLi);
+        });
+        btn.appendChild(subList);
+      }
+
       btn.addEventListener('click', () => {
-        if (state.activeAnnexId === annex.id) {
+        if (state.activeAnnexId === annex.id && !state.projectionMode) {
           setDrawerOpen(!state.drawerOpen);
-          if (state.drawerOpen) {
-            triggerDrawerSwitchAnimation();
-          }
+          if (state.drawerOpen) triggerDrawerSwitchAnimation();
           return;
         }
         state.activeAnnexId = annex.id;
         clearViewingVersion();
         state.zoomPercent = 100;
-        state.drawerOpen = true;
-        annexDrawer.classList.remove('is-collapsed');
-        toggleDrawerBtn.setAttribute('aria-expanded', 'true');
-        toggleDrawerLabel.textContent = 'Ocultar panel';
+        if (!state.projectionMode) {
+          state.drawerOpen = true;
+          annexDrawer.classList.remove('is-collapsed');
+          toggleDrawerBtn.setAttribute('aria-expanded', 'true');
+          toggleDrawerLabel.textContent = 'Ocultar panel';
+        }
         clearError();
         titleSaveStatus.textContent = '';
         renderAll();
-        triggerDrawerSwitchAnimation();
+        if (!state.projectionMode) triggerDrawerSwitchAnimation();
       });
 
       li.appendChild(btn);
@@ -1695,17 +1871,55 @@ function initPortfolioApp() {
     const attached = state.sessionFiles.get(annex.id);
 
     drawerCodeLabel.textContent =
-      annex.kind === 'video' ? `${annex.code.toUpperCase()} · SOLO VIDEO` : `${annex.code.toUpperCase()} · DOCUMENTOS`;
+      annex.id === '12' ? 'ANEXOS · DOCUMENTOS' : `APARTADO ${annex.code.toUpperCase()} · EVIDENCIA`;
 
     drawerAcceptedLabel.textContent =
-      annex.kind === 'video'
-        ? 'Formato requerido: Video (.mp4, .webm, .ogg, .mov, .m4v)'
-        : 'Formatos: PDF, Word, Excel, PowerPoint e imágenes (.png, .jpg, .jpeg, .gif, .webp, .svg, .bmp)';
+      'Formatos: Word (.docx), Excel (.xlsx), PowerPoint (.pptx), PDF e imágenes (.png, .jpg, .svg, .webp)';
 
     annexTitleInput.value = annex.title;
     annexDescInput.value = annex.description;
 
-    // Configurar input file según tipo de anexo (A-K documentos vs L video)
+    // Numeración de página editable ("___")
+    if (annexPageInput) {
+      annexPageInput.value = pagesMap[annex.id] || '';
+    }
+    if (subtitlesPagesBox) {
+      subtitlesPagesBox.innerHTML = '';
+      if (Array.isArray(annex.subtitles) && annex.subtitles.length > 0) {
+        subtitlesPagesBox.hidden = false;
+        annex.subtitles.forEach((sub) => {
+          const row = document.createElement('div');
+          row.className = 'page-number-row';
+          const lbl = document.createElement('label');
+          lbl.className = 'page-number-label';
+          lbl.textContent = sub.title;
+          const inp = document.createElement('input');
+          inp.type = 'text';
+          inp.className = 'text-input page-number-input tabular-nums';
+          inp.placeholder = '___';
+          inp.maxLength = 12;
+          inp.value = pagesMap[sub.id] || '';
+          inp.addEventListener('input', () => {
+            const val = inp.value.trim();
+            if (val) {
+              pagesMap[sub.id] = val;
+            } else {
+              delete pagesMap[sub.id];
+            }
+            savePersistedMap(window.localStorage, STORAGE_KEYS.pages, pagesMap);
+            renderAnnexRail();
+            renderPreviewHeaderMeta();
+          });
+          row.appendChild(lbl);
+          row.appendChild(inp);
+          subtitlesPagesBox.appendChild(row);
+        });
+      } else {
+        subtitlesPagesBox.hidden = true;
+      }
+    }
+
+    // Configurar input file
     fileInput.accept = annex.acceptedExtensions.map((ext) => `.${ext}`).join(',');
     dropzoneLimits.textContent = `Máximo ${formatFileSize(annex.maxBytes)} · ${annex.acceptedExtensions
       .map((e) => `.${e}`)
@@ -1750,6 +1964,32 @@ function initPortfolioApp() {
     zoomLevelLabel.textContent = `${state.zoomPercent}%`;
   }
 
+  function renderPreviewHeaderMeta() {
+    const annex = getActiveAnnex();
+    if (previewAnnexCode) {
+      previewAnnexCode.textContent = annex.id === '12' ? 'Anexos' : `Apartado ${annex.code}`;
+    }
+    if (previewPageBadge) {
+      previewPageBadge.textContent = getPageLabel(pagesMap, annex.id);
+    }
+    if (previewHeading) {
+      previewHeading.textContent = annex.title;
+    }
+    if (previewSubtitlesList) {
+      previewSubtitlesList.innerHTML = '';
+      if (Array.isArray(annex.subtitles) && annex.subtitles.length > 0) {
+        previewSubtitlesList.hidden = false;
+        annex.subtitles.forEach((sub) => {
+          const li = document.createElement('li');
+          li.textContent = `${sub.title} (${getPageLabel(pagesMap, sub.id)})`;
+          previewSubtitlesList.appendChild(li);
+        });
+      } else {
+        previewSubtitlesList.hidden = true;
+      }
+    }
+  }
+
   function renderPreview() {
     const annex = getActiveAnnex();
     // Si se está viendo una versión anterior del histórico, se previsualiza esa en lugar de la actual
@@ -1757,8 +1997,7 @@ function initPortfolioApp() {
       state.viewingVersion && state.viewingVersion.annexId === annex.id ? state.viewingVersion : null;
     const attached = viewing ? viewing.entry : state.sessionFiles.get(annex.id);
 
-    previewAnnexCode.textContent = annex.code;
-    previewHeading.textContent = annex.title;
+    renderPreviewHeaderMeta();
     previewContent.innerHTML = '';
 
     const hasFileOrUrl = Boolean(attached && (attached.objectUrl || attached.publicUrl || attached.publishedPath));
@@ -1769,10 +2008,28 @@ function initPortfolioApp() {
       previewDownloadLink.hidden = true;
       if (previewOpenTabLink) previewOpenTabLink.hidden = true;
       zoomControls.hidden = true;
+      if (previewEmptyTitle) previewEmptyTitle.textContent = annex.title;
+      if (previewEmptySubtitles) {
+        previewEmptySubtitles.innerHTML = '';
+        if (Array.isArray(annex.subtitles) && annex.subtitles.length > 0) {
+          previewEmptySubtitles.hidden = false;
+          annex.subtitles.forEach((sub) => {
+            const li = document.createElement('li');
+            const t = document.createElement('span');
+            t.textContent = sub.title;
+            const p = document.createElement('span');
+            p.className = 'tabular-nums';
+            p.textContent = getPageLabel(pagesMap, sub.id);
+            li.appendChild(t);
+            li.appendChild(p);
+            previewEmptySubtitles.appendChild(li);
+          });
+        } else {
+          previewEmptySubtitles.hidden = true;
+        }
+      }
       previewEmptyHint.textContent =
-        annex.kind === 'video'
-          ? 'Carga un archivo de video (.mp4, .webm, .ogg o .mov) desde el panel desplegable para reproducirlo y descargarlo aquí.'
-          : 'Carga un documento (.pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx) o una imagen (.png, .jpg, .gif, .webp, .svg) desde el panel desplegable para previsualizarlo y descargarlo aquí.';
+        'Este apartado aún no tiene un documento cargado. Adjunta tu archivo Word (.docx), Excel (.xlsx), PowerPoint (.pptx), PDF o imagen para previsualizarlo en pantalla.';
       return;
     }
 
@@ -1857,15 +2114,20 @@ function initPortfolioApp() {
     }
 
     // 2. Previsualización de Video en Anexo L ("Anexos Html") con <video controls>
-    // 1b. Previsualización de imágenes (diagramas de dominio, casos de uso, etc.) con zoom y desplazamiento
+    // 1b. Previsualización de imágenes (diagramas de dominio, casos de uso, etc.) con clic para ampliar
     if (category === 'image') {
       const zoomWrap = document.createElement('div');
       zoomWrap.className = 'preview-zoom-wrapper preview-zoom-wrapper--image';
+
+      const hint = document.createElement('p');
+      hint.className = 'image-click-hint';
+      hint.textContent = 'Haz clic sobre la imagen para ampliarla a pantalla completa.';
 
       const img = document.createElement('img');
       img.className = 'preview-image';
       img.src = attached.objectUrl || attached.publicUrl;
       img.alt = `Imagen: ${attached.name}`;
+      img.title = 'Haz clic para ampliar';
       img.decoding = 'async';
       img.addEventListener('error', () => {
         zoomWrap.innerHTML = '';
@@ -1875,6 +2137,7 @@ function initPortfolioApp() {
         zoomWrap.appendChild(msg);
       });
 
+      zoomWrap.appendChild(hint);
       zoomWrap.appendChild(img);
       applyZoomTransform(zoomWrap);
       previewContent.appendChild(zoomWrap);
@@ -2242,6 +2505,7 @@ function initPortfolioApp() {
 
   function renderAll() {
     updateLoadedCounter();
+    renderHeroVideo();
     renderAnnexRail();
     renderDrawer();
     renderPreview();
@@ -2350,11 +2614,133 @@ function initPortfolioApp() {
   /* ------------------------------------------------------------------------
      Eventos de interfaz
      ------------------------------------------------------------------------ */
-  enterPortfolioBtn.addEventListener('click', () => showView('annexes'));
-  backToCoverBtn.addEventListener('click', () => showView('cover'));
+  if (openCoverModalBtn && coverModal) {
+    openCoverModalBtn.addEventListener('click', () => {
+      coverModal.hidden = false;
+    });
+  }
+  const closeCoverModal = () => {
+    if (coverModal) coverModal.hidden = true;
+  };
+  if (closeCoverModalBtn) closeCoverModalBtn.addEventListener('click', closeCoverModal);
+  if (enterPortfolioBtn) enterPortfolioBtn.addEventListener('click', closeCoverModal);
+  if (coverModal) {
+    coverModal.addEventListener('click', (e) => {
+      if (e.target === coverModal) closeCoverModal();
+    });
+  }
+
+  // Video de presentación (Hero inicial)
+  if (heroVideoUploadBtn && heroVideoInput) {
+    heroVideoUploadBtn.addEventListener('click', () => heroVideoInput.click());
+  }
+  if (heroVideoEmptyBtn && heroVideoInput) {
+    heroVideoEmptyBtn.addEventListener('click', () => heroVideoInput.click());
+  }
+  if (heroVideoInput) {
+    heroVideoInput.addEventListener('change', (e) => {
+      const target = e.target;
+      if (target.files && target.files[0]) {
+        handleHeroVideoFile(target.files[0]);
+        target.value = '';
+      }
+    });
+  }
+  if (heroVideoRemoveBtn) {
+    heroVideoRemoveBtn.addEventListener('click', removeHeroVideoFile);
+  }
+  if (heroVideoDropzone) {
+    heroVideoDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      heroVideoDropzone.classList.add('is-dragover');
+    });
+    heroVideoDropzone.addEventListener('dragleave', () => {
+      heroVideoDropzone.classList.remove('is-dragover');
+    });
+    heroVideoDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      heroVideoDropzone.classList.remove('is-dragover');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleHeroVideoFile(e.dataTransfer.files[0]);
+      }
+    });
+  }
+  if (heroVideoSpeeds && heroVideoPlayer) {
+    heroVideoSpeeds.querySelectorAll('.video-speed-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const rate = Number(btn.getAttribute('data-rate') || 1);
+        heroVideoPlayer.playbackRate = rate;
+        heroVideoSpeeds.querySelectorAll('.video-speed-btn').forEach((b) =>
+          b.classList.toggle('is-active', b === btn)
+        );
+      });
+    });
+  }
+
+  // Ampliación de imágenes al hacer clic (directas o incrustadas en Word/PowerPoint/Excel)
+  previewContent.addEventListener('click', (e) => {
+    const img = e.target.closest('img.preview-image, img.office-embedded-image');
+    if (img && img.src) {
+      openImageLightbox(img.src, img.alt || getActiveAnnex().title);
+    }
+  });
+  if (lightboxZoomIn) {
+    lightboxZoomIn.addEventListener('click', () => {
+      state.lightboxZoomPercent = Math.min(300, state.lightboxZoomPercent + 25);
+      applyLightboxZoom();
+    });
+  }
+  if (lightboxZoomOut) {
+    lightboxZoomOut.addEventListener('click', () => {
+      state.lightboxZoomPercent = Math.max(50, state.lightboxZoomPercent - 25);
+      applyLightboxZoom();
+    });
+  }
+  if (lightboxZoomReset) {
+    lightboxZoomReset.addEventListener('click', () => {
+      state.lightboxZoomPercent = 100;
+      applyLightboxZoom();
+    });
+  }
+  if (lightboxCloseBtn) {
+    lightboxCloseBtn.addEventListener('click', closeImageLightbox);
+  }
+  if (imageLightbox) {
+    imageLightbox.addEventListener('click', (e) => {
+      if (e.target === imageLightbox || e.target.id === 'lightbox-stage') {
+        closeImageLightbox();
+      }
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (imageLightbox && !imageLightbox.hidden) closeImageLightbox();
+      if (coverModal && !coverModal.hidden) closeCoverModal();
+      if (shareModal && !shareModal.hidden) shareModal.hidden = true;
+    }
+  });
+
+  if (projectionModeBtn) {
+    projectionModeBtn.addEventListener('click', () => setProjectionMode(!state.projectionMode));
+  }
 
   closeDrawerBtn.addEventListener('click', () => setDrawerOpen(false));
   toggleDrawerBtn.addEventListener('click', () => setDrawerOpen(!state.drawerOpen));
+
+  if (annexPageInput) {
+    annexPageInput.addEventListener('input', () => {
+      const annex = getActiveAnnex();
+      const val = annexPageInput.value.trim();
+      if (val) {
+        pagesMap[annex.id] = val;
+      } else {
+        delete pagesMap[annex.id];
+      }
+      savePersistedMap(window.localStorage, STORAGE_KEYS.pages, pagesMap);
+      renderAnnexRail();
+      renderPreviewHeaderMeta();
+    });
+  }
 
   saveTitleBtn.addEventListener('click', saveCurrentTitle);
   annexTitleInput.addEventListener('keydown', (e) => {
@@ -2367,12 +2753,14 @@ function initPortfolioApp() {
 
   resetNamesBtn.addEventListener('click', () => {
     Object.keys(titlesMap).forEach((k) => delete titlesMap[k]);
+    Object.keys(pagesMap).forEach((k) => delete pagesMap[k]);
     savePersistedMap(window.localStorage, STORAGE_KEYS.titles, {});
+    savePersistedMap(window.localStorage, STORAGE_KEYS.pages, {});
     state.annexes = state.annexes.map((current) => {
       const base = DEFAULT_ANNEXES.find((d) => d.id === current.id);
       return { ...current, title: base ? base.title : current.title };
     });
-    titleSaveStatus.textContent = 'Nombres predeterminados restaurados.';
+    titleSaveStatus.textContent = 'Índice y numeración predeterminados restaurados.';
     renderAll();
   });
 
@@ -2515,12 +2903,14 @@ function initPortfolioApp() {
     const items = [];
     let skippedLarge = 0;
 
-    for (const annex of state.annexes) {
+    const allItemsToExport = [...state.annexes, PRESENTATION_VIDEO_ANNEX];
+    for (const annex of allItemsToExport) {
       const entry = state.sessionFiles.get(annex.id);
       const itemData = {
         id: annex.id,
         title: annex.title,
         description: annex.description,
+        page: pagesMap[annex.id] || '',
         publicUrl: entry ? entry.publicUrl || '' : '',
       };
 
@@ -2561,7 +2951,8 @@ function initPortfolioApp() {
     const manifestEntries = [];
     let downloadedCount = 0;
 
-    for (const annex of state.annexes) {
+    const allItemsToPublish = [...state.annexes, PRESENTATION_VIDEO_ANNEX];
+    for (const annex of allItemsToPublish) {
       const entry = state.sessionFiles.get(annex.id);
       if (!entry || (!entry.file && !entry.publicUrl)) continue;
 
@@ -2625,8 +3016,15 @@ function initPortfolioApp() {
       for (const item of data.annexes) {
         if (!item || !item.id) continue;
         const annexId = String(item.id);
-        const annexObj = state.annexes.find((a) => a.id === annexId);
+        const annexObj =
+          annexId === PRESENTATION_VIDEO_ANNEX.id
+            ? PRESENTATION_VIDEO_ANNEX
+            : state.annexes.find((a) => a.id === annexId);
         if (!annexObj) continue;
+
+        if (typeof item.page === 'string' && item.page.trim()) {
+          pagesMap[annexId] = item.page.trim();
+        }
 
         if (typeof item.title === 'string' && item.title.trim()) {
           annexObj.title = item.title.trim();
@@ -2670,6 +3068,7 @@ function initPortfolioApp() {
       savePersistedMap(window.localStorage, STORAGE_KEYS.titles, titlesMap);
       savePersistedMap(window.localStorage, STORAGE_KEYS.descriptions, descriptionsMap);
       savePersistedMap(window.localStorage, STORAGE_KEYS.publicUrls, publicUrlsMap);
+      savePersistedMap(window.localStorage, STORAGE_KEYS.pages, pagesMap);
       renderAll();
       window.alert('Paquete del portafolio importado correctamente. Ya puedes previsualizar todos los anexos.');
     } catch {
@@ -2714,12 +3113,8 @@ function initPortfolioApp() {
     });
   });
 
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('autostart') === '1') {
-    showView('annexes');
-  } else {
-    showView('cover');
-  }
+  // Iniciar mostrando directamente el Video de Presentación al inicio y el Portafolio debajo
+  renderAll();
 }
 
 // Exponer utilidades para pruebas automatizadas sin requerir sintaxis export (compatible con file:// y servidores)
@@ -2731,12 +3126,14 @@ globalThis.ADSO_PORTFOLIO = {
   VIDEO_EXTENSIONS,
   MAX_DOCUMENT_BYTES,
   MAX_VIDEO_BYTES,
+  PRESENTATION_VIDEO_ANNEX,
   DEFAULT_ANNEXES,
   getFileExtension,
   formatFileSize,
   validateFileForAnnex,
   buildOfficeViewerUrls,
   getPreviewCategory,
+  getPageLabel,
   loadPersistedMap,
   savePersistedMap,
   mergeAnnexesWithStorage,

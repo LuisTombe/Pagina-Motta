@@ -4,6 +4,7 @@ import './app.js';
 
 const {
   DEFAULT_ANNEXES,
+  PRESENTATION_VIDEO_ANNEX,
   LEGACY_ID_MAP,
   MAX_DOCUMENT_BYTES,
   MAX_VIDEO_BYTES,
@@ -12,28 +13,36 @@ const {
   formatFileSize,
   getFileExtension,
   getPreviewCategory,
+  getPageLabel,
   loadPersistedMap,
   mergeAnnexesWithStorage,
   savePersistedMap,
   validateFileForAnnex,
 } = (globalThis as any).ADSO_PORTFOLIO;
 
-test('DEFAULT_ANNEXES defines 13 numbered annexes (1-13), with 12 as Portafolio de evidencias and 13 as video', () => {
-  assert.equal(DEFAULT_ANNEXES.length, 13);
+test('DEFAULT_ANNEXES y PRESENTATION_VIDEO_ANNEX respetan la estructura fija oficial (1-11 + Anexos + Video)', () => {
+  assert.equal(DEFAULT_ANNEXES.length, 12);
   assert.equal(DEFAULT_ANNEXES[0].id, '1');
-  assert.equal(DEFAULT_ANNEXES[0].title, 'Anexo 1. Planeación de actividades');
+  assert.equal(DEFAULT_ANNEXES[0].title, '1. Planeación de actividades');
+  assert.equal(DEFAULT_ANNEXES[5].subtitles.length, 2);
+  assert.equal(DEFAULT_ANNEXES[5].subtitles[0].title, '6.1 Revisión de los modelos de análisis');
+  assert.equal(DEFAULT_ANNEXES[5].subtitles[1].title, '6.2 Elaboración de prototipos');
+  assert.equal(DEFAULT_ANNEXES[7].subtitles[0].title, '8.1 Comparación de equipos y especificaciones');
+  assert.equal(DEFAULT_ANNEXES[7].subtitles[1].title, '8.2 Selección y justificación de los equipos');
+  assert.equal(DEFAULT_ANNEXES[9].subtitles[0].title, '10.1 Comparación y cotización de tecnologías');
+  assert.equal(DEFAULT_ANNEXES[9].subtitles[1].title, '10.2 Selección y justificación de herramientas');
   assert.equal(DEFAULT_ANNEXES[10].id, '11');
-  assert.equal(DEFAULT_ANNEXES[10].title, 'Anexo 11. Recursos humanos');
+  assert.equal(DEFAULT_ANNEXES[10].title, '11. Recursos humanos');
+  assert.equal(DEFAULT_ANNEXES[10].subtitles.length, 3);
+  assert.equal(DEFAULT_ANNEXES[10].subtitles[2].title, '11.3 Diagrama de Gantt y estimación de costos');
 
-  const annex12 = DEFAULT_ANNEXES[11];
-  assert.equal(annex12.id, '12');
-  assert.equal(annex12.title, 'Anexo 12. Portafolio de evidencias');
-  assert.equal(annex12.kind, 'document');
+  const anexosItem = DEFAULT_ANNEXES[11];
+  assert.equal(anexosItem.id, '12');
+  assert.equal(anexosItem.title, 'Anexos');
+  assert.equal(anexosItem.kind, 'document');
 
-  const annex13 = DEFAULT_ANNEXES[12];
-  assert.equal(annex13.id, '13');
-  assert.equal(annex13.title, 'Anexo 13. Anexos Html');
-  assert.equal(annex13.kind, 'video');
+  assert.equal(PRESENTATION_VIDEO_ANNEX.id, '13');
+  assert.equal(PRESENTATION_VIDEO_ANNEX.kind, 'video');
 });
 
 test('getFileExtension extracts lowercase extensions safely', () => {
@@ -45,15 +54,15 @@ test('getFileExtension extracts lowercase extensions safely', () => {
 
 test('validateFileForAnnex accepts valid documents for 1-12 and rejects videos/executables', () => {
   const annex1 = DEFAULT_ANNEXES[0];
-  const annex12 = DEFAULT_ANNEXES[11];
+  const anexos = DEFAULT_ANNEXES[11];
 
   assert.equal(validateFileForAnnex(annex1, { name: 'plan.pdf', size: 1024 }).valid, true);
-  assert.equal(validateFileForAnnex(annex12, { name: 'portafolio.pdf', size: 2048 }).valid, true);
+  assert.equal(validateFileForAnnex(anexos, { name: 'portafolio.pdf', size: 2048 }).valid, true);
   assert.equal(validateFileForAnnex(annex1, { name: 'casos.docx', size: 4096 }).valid, true);
   assert.equal(validateFileForAnnex(annex1, { name: 'presupuesto.xlsx', size: 4096 }).valid, true);
   assert.equal(validateFileForAnnex(annex1, { name: 'expo.pptx', size: 4096 }).valid, true);
 
-  const videoOnDoc = validateFileForAnnex(annex12, { name: 'demo.mp4', size: 4096 });
+  const videoOnDoc = validateFileForAnnex(anexos, { name: 'demo.mp4', size: 4096 });
   assert.equal(videoOnDoc.valid, false);
   assert.match(videoOnDoc.error ?? '', /Formato no permitido/);
 
@@ -66,17 +75,15 @@ test('validateFileForAnnex accepts valid documents for 1-12 and rejects videos/e
   assert.match(oversized.error ?? '', /límite permitido/);
 });
 
-test('validateFileForAnnex accepts only video files for Anexo 13 (Anexo 13. Anexos Html)', () => {
-  const annex13 = DEFAULT_ANNEXES[12];
+test('validateFileForAnnex accepts only video files for PRESENTATION_VIDEO_ANNEX', () => {
+  assert.equal(validateFileForAnnex(PRESENTATION_VIDEO_ANNEX, { name: 'recorrido.mp4', size: 2048 }).valid, true);
+  assert.equal(validateFileForAnnex(PRESENTATION_VIDEO_ANNEX, { name: 'demo.webm', size: 2048 }).valid, true);
 
-  assert.equal(validateFileForAnnex(annex13, { name: 'recorrido.mp4', size: 2048 }).valid, true);
-  assert.equal(validateFileForAnnex(annex13, { name: 'demo.webm', size: 2048 }).valid, true);
-
-  const pdfOnVideo = validateFileForAnnex(annex13, { name: 'manual.pdf', size: 2048 });
+  const pdfOnVideo = validateFileForAnnex(PRESENTATION_VIDEO_ANNEX, { name: 'manual.pdf', size: 2048 });
   assert.equal(pdfOnVideo.valid, false);
   assert.match(pdfOnVideo.error ?? '', /solo acepta videos/);
 
-  const oversizedVideo = validateFileForAnnex(annex13, { name: 'largo.mp4', size: MAX_VIDEO_BYTES + 1 });
+  const oversizedVideo = validateFileForAnnex(PRESENTATION_VIDEO_ANNEX, { name: 'largo.mp4', size: MAX_VIDEO_BYTES + 1 });
   assert.equal(oversizedVideo.valid, false);
 });
 
@@ -90,7 +97,7 @@ test('buildOfficeViewerUrls builds Microsoft Office Online and Google Docs URLs 
   assert.equal(buildOfficeViewerUrls('not-a-url'), null);
 });
 
-test('localStorage persistence helpers merge custom titles and migrate legacy A-L keys to 1-13', () => {
+test('localStorage persistence helpers merge custom titles and format page numbers', () => {
   const store = new Map<string, string>();
   const mockStorage = {
     getItem: (k: string) => store.get(k) ?? null,
@@ -101,12 +108,15 @@ test('localStorage persistence helpers merge custom titles and migrate legacy A-
   assert.equal(LEGACY_ID_MAP.K, '11');
   assert.equal(LEGACY_ID_MAP.L, '13');
 
-  savePersistedMap(mockStorage, STORAGE_KEYS.titles, { B: 'Anexo B. Casos Editados' });
+  savePersistedMap(mockStorage, STORAGE_KEYS.titles, { '2': '2. Diagramas de casos de uso (Actualizado)' });
   const loaded = loadPersistedMap(mockStorage, STORAGE_KEYS.titles);
   const merged = mergeAnnexesWithStorage(DEFAULT_ANNEXES, loaded, {});
 
-  assert.equal(merged[1].title, 'Anexo 2. Casos Editados');
-  assert.equal(merged[0].title, 'Anexo 1. Planeación de actividades');
+  assert.equal(merged[1].title, '2. Diagramas de casos de uso (Actualizado)');
+  assert.equal(merged[0].title, '1. Planeación de actividades');
+
+  assert.equal(getPageLabel({}, '1'), 'Pág. ___');
+  assert.equal(getPageLabel({ '6.1': '24' }, '6.1'), 'Pág. 24');
 
   store.set(STORAGE_KEYS.titles, '{broken json');
   assert.deepEqual(loadPersistedMap(mockStorage, STORAGE_KEYS.titles), {});
@@ -135,14 +145,13 @@ test('control de versiones: getNextVersionNumber y sortVersionsDescending ordena
   );
 });
 
-test('imagenes (diagramas): se aceptan en los anexos 1-12, se previsualizan como imagen y no en el anexo 13 de video', () => {
+test('imagenes (diagramas): se aceptan en los apartados 1-12 y no en el video de presentacion', () => {
   const annex4 = DEFAULT_ANNEXES[3];
-  const annex13 = DEFAULT_ANNEXES[12];
 
   for (const name of ['diagrama.png', 'dominio.JPG', 'modelo.jpeg', 'flujo.gif', 'er.webp', 'uml.svg', 'foto.bmp']) {
     assert.equal(validateFileForAnnex(annex4, { name, size: 2048 }).valid, true, name);
   }
-  assert.equal(validateFileForAnnex(annex13, { name: 'diagrama.png', size: 2048 }).valid, false);
+  assert.equal(validateFileForAnnex(PRESENTATION_VIDEO_ANNEX, { name: 'diagrama.png', size: 2048 }).valid, false);
   assert.equal(getPreviewCategory('png'), 'image');
   assert.equal(getPreviewCategory('svg'), 'image');
   assert.equal(getPreviewCategory('pdf'), 'pdf');

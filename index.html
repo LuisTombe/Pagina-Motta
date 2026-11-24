@@ -3,15 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Portafolio de Evidencias ADSO — Grupo 8 · ÉCHELE CAMELLO | SENA</title>
+    <title>ÉCHELE CAMELLO — Presentación y Portafolio de Evidencias | ADSO Grupo 8 · SENA</title>
     <meta
       name="description"
-      content="Portafolio de Evidencias interactivo del programa Análisis y Desarrollo de Software (ADSO) del SENA — Grupo 8 · Proyecto Échele Camello, Neiva/Huila."
+      content="Presentación ejecutiva y Portafolio de Evidencias del proyecto Échele Camello — Programa Análisis y Desarrollo de Software (ADSO), SENA Neiva/Huila, Grupo 8."
     />
-    <meta property="og:title" content="Portafolio de Evidencias ADSO — Grupo 8 · ÉCHELE CAMELLO | SENA" />
+    <meta property="og:title" content="ÉCHELE CAMELLO — Presentación y Portafolio de Evidencias | SENA" />
     <meta
       property="og:description"
-      content="Portafolio de evidencias interactivo con carga, previsualización y descarga de los 13 anexos del proyecto ADSO — Grupo 8."
+      content="Video de presentación, estructura fija del portafolio, previsualización de Word (.docx), Excel (.xlsx), imágenes y PDF para proyección."
     />
     <meta property="og:type" content="website" />
 
@@ -24,7 +24,7 @@
     />
 
     <!-- Hoja de estilos principal (CSS3 puro sin frameworks) -->
-    <link rel="stylesheet" href="./styles.css?v=20261117g" />
+    <link rel="stylesheet" href="./styles.css?v=20261123a" />
   </head>
   <body>
     <!-- Marca de agua institucional global del SENA sobre fondo blanco -->
@@ -43,26 +43,464 @@
           SENA
         </text>
         <circle cx="130" cy="92" r="22" fill="currentColor" />
-        <path
-          d="M36 122H112L66 204L44 190L76 138H36V122Z"
-          fill="currentColor"
-        />
-        <path
-          d="M224 122H148L194 204L216 190L184 138H224V122Z"
-          fill="currentColor"
-        />
-        <path
-          d="M130 142L84 224L104 236L130 190L156 236L176 224L130 142Z"
-          fill="currentColor"
-        />
+        <path d="M36 122H112L66 204L44 190L76 138H36V122Z" fill="currentColor" />
+        <path d="M224 122H148L194 204L216 190L184 138H224V122Z" fill="currentColor" />
+        <path d="M130 142L84 224L104 236L130 190L156 236L176 224L130 142Z" fill="currentColor" />
       </svg>
     </div>
 
     <!-- =================================================================== -->
-    <!-- PANTALLA 1: PORTADA INSTITUCIONAL                                   -->
+    <!-- BARRA DE NAVEGACIÓN SUPERIOR FIJA                                   -->
     <!-- =================================================================== -->
-    <section id="cover-screen" class="cover-screen is-entering" aria-labelledby="cover-project-title">
-      <div class="cover-card">
+    <header class="top-bar">
+      <div class="top-bar__brand">
+        <span class="top-bar__logo-dot" aria-hidden="true"></span>
+        <span class="top-bar__title">ÉCHELE CAMELLO</span>
+        <span class="top-bar__group-pill">Grupo 8</span>
+      </div>
+
+      <nav class="top-bar__nav" aria-label="Navegación rápida de presentación">
+        <a href="#presentation-hero" class="top-bar__nav-link">Video</a>
+        <a href="#project-pitch" class="top-bar__nav-link">Resumen</a>
+        <a href="#portfolio-workspace" class="top-bar__nav-link">Portafolio (1–11 y Anexos)</a>
+        <button id="open-cover-modal-btn" type="button" class="top-bar__nav-link top-bar__nav-btn">
+          Portada
+        </button>
+      </nav>
+
+      <div class="top-bar__actions">
+        <span id="loaded-counter" class="top-bar__counter tabular-nums">0 de 12 con archivo</span>
+        <button id="share-portfolio-btn" type="button" class="btn-navy-sm" title="Publicar o compartir evidencias para cualquier computador">
+          Compartir / Publicar
+        </button>
+        <button id="import-package-btn" type="button" class="btn-outline-sm" title="Cargar un paquete .json compartido">
+          Importar paquete
+        </button>
+        <input id="import-package-input" type="file" accept=".json,application/json" class="sr-only" />
+        <button id="reset-names-btn" type="button" class="btn-ghost-sm" title="Restaurar títulos y números de página predeterminados">
+          Restaurar índice
+        </button>
+      </div>
+    </header>
+
+    <!-- =================================================================== -->
+    <!-- SECCIÓN 1 (INICIO): VIDEO DE PRESENTACIÓN DE "ÉCHELE CAMELLO"       -->
+    <!-- =================================================================== -->
+    <main id="main-content" class="page-flow">
+      <section id="presentation-hero" class="hero-section" aria-labelledby="hero-project-title">
+        <div class="hero-container">
+          <div class="hero-header">
+            <div class="hero-header__copy">
+              <div class="hero-kicker">
+                <span class="hero-kicker__badge">SENA · Análisis y Desarrollo de Software (ADSO)</span>
+                <span class="hero-kicker__meta">Neiva/Huila · Sede Industria La Empresa y Los servicios</span>
+              </div>
+              <h1 id="hero-project-title" class="hero-title">ÉCHELE CAMELLO</h1>
+              <p class="hero-subtitle">
+                Multiplataforma Digital de Intermediación de Servicios para Trabajadores Independientes e Informales — <strong>Portafolio de Evidencias</strong>
+              </p>
+            </div>
+            <div class="hero-header__actions">
+              <a href="#portfolio-workspace" class="btn-primary-cover">
+                <span>Ir a los Anexos del Portafolio</span>
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18" aria-hidden="true">
+                  <path d="M10 4v12m0 0l-5-5m5 5l5-5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Escenario Principal del Video de Presentación -->
+          <div class="hero-video-panel">
+            <div class="hero-video-panel__bar">
+              <div class="hero-video-panel__title-group">
+                <span class="hero-video-badge">VIDEO DE PRESENTACIÓN</span>
+                <span id="hero-video-filename" class="hero-video-filename">Pendiente por adjuntar</span>
+              </div>
+              <div class="hero-video-panel__controls">
+                <div id="hero-video-speeds" class="video-speed-group" hidden>
+                  <span class="video-speed-label">Velocidad:</span>
+                  <button type="button" class="video-speed-btn" data-rate="0.75">0.75x</button>
+                  <button type="button" class="video-speed-btn is-active" data-rate="1">1x</button>
+                  <button type="button" class="video-speed-btn" data-rate="1.25">1.25x</button>
+                  <button type="button" class="video-speed-btn" data-rate="1.5">1.5x</button>
+                  <button type="button" class="video-speed-btn" data-rate="2">2x</button>
+                </div>
+                <input id="hero-video-input" type="file" accept=".mp4,.webm,.ogg,.mov,.m4v,.avi,.mkv" class="sr-only" />
+                <button id="hero-video-upload-btn" type="button" class="btn-navy-sm">
+                  Adjuntar / Reemplazar video
+                </button>
+                <a id="hero-video-download-link" href="#" download class="btn-outline-sm" hidden>
+                  Descargar video
+                </a>
+                <button id="hero-video-remove-btn" type="button" class="btn-danger-sm" hidden>
+                  Quitar
+                </button>
+              </div>
+            </div>
+
+            <div id="hero-video-dropzone" class="hero-video-stage">
+              <div id="hero-video-empty" class="hero-video-empty">
+                <div class="hero-video-empty__icon" aria-hidden="true">
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" width="48" height="48">
+                    <rect x="6" y="10" width="36" height="28" rx="4" />
+                    <path d="M20 18l11 6-11 6V18Z" fill="currentColor" stroke="none" />
+                  </svg>
+                </div>
+                <h2 class="hero-video-empty__title">Video de presentación — Échele Camello</h2>
+                <p class="hero-video-empty__desc">
+                  Marcador listo para proyección: arrastra aquí o adjunta el video de presentación (<code>.mp4</code>, <code>.webm</code>, <code>.ogg</code>, <code>.mov</code>) para reproducirlo al inicio de la exposición.
+                </p>
+                <button id="hero-video-empty-btn" type="button" class="btn-primary-cover">
+                  Seleccionar video de presentación
+                </button>
+              </div>
+              <video
+                id="hero-video-player"
+                class="hero-video-player"
+                controls
+                playsinline
+                preload="metadata"
+                hidden
+                aria-label="Video de presentación del proyecto Échele Camello"
+              ></video>
+            </div>
+            <div id="hero-video-error" class="upload-error" role="alert" hidden></div>
+          </div>
+
+          <!-- Resumen ejecutivo de venta del proyecto (datos verificados del SRS) -->
+          <div id="project-pitch" class="pitch-grid" aria-label="Puntos clave del proyecto Échele Camello">
+            <article class="pitch-card">
+              <span class="pitch-card__tag">Problema Real · DANE 2026</span>
+              <h2 class="pitch-card__title">55,3 % de informalidad nacional (83,2 % rural)</h2>
+              <p class="pitch-card__text">
+                Trabajadores de oficios de proximidad (plomería, electricidad, cerrajería, mantenimiento) dependen del «rebusque» sin presencia digital ni visibilidad confiable.
+              </p>
+            </article>
+            <article class="pitch-card">
+              <span class="pitch-card__tag">Solución Multiplataforma</span>
+              <h2 class="pitch-card__title">Web + App Android con backend común</h2>
+              <p class="pitch-card__text">
+                Conecta clientes y trabajadores con perfiles profesionales, búsqueda por cercanía, agendamiento, chat contextual, calificaciones y panel administrativo.
+              </p>
+            </article>
+            <article class="pitch-card">
+              <span class="pitch-card__tag">Arquitectura Sólida (SRS)</span>
+              <h2 class="pitch-card__title">7 Microservicios · 17 Entidades</h2>
+              <p class="pitch-card__text">
+                Especificación consolidada con 61 Requerimientos Funcionales, 30 No Funcionales, 20 Historias de Usuario y 16 Casos de Uso trazables.
+              </p>
+            </article>
+            <article class="pitch-card">
+              <span class="pitch-card__tag">Equipo · Grupo 8</span>
+              <h2 class="pitch-card__title">4 Aprendices ADSO · Neiva/Huila</h2>
+              <p class="pitch-card__text">
+                Luis Yamit Tombe Cabrera; Paula Valentina Vargas Andrade; Juan David Parada Vargas; Martin Andrés Andrade Royet.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- SECCIÓN 2: PORTAFOLIO DE EVIDENCIAS (ESTRUCTURA FIJA 1–11 + ANEXOS) -->
+      <!-- =================================================================== -->
+      <section id="portfolio-workspace" class="annexes-screen" aria-labelledby="portfolio-section-heading">
+        <div class="workspace-banner">
+          <div>
+            <span class="workspace-banner__eyebrow">EXPLORADOR PARA PROYECCIÓN · ALTA DEFINICIÓN</span>
+            <h2 id="portfolio-section-heading" class="workspace-banner__title">
+              Estructura del Portafolio de Evidencias
+            </h2>
+          </div>
+          <p class="workspace-banner__hint">
+            Selecciona cualquier apartado en el índice derecho para previsualizar documentos Word (<code>.docx</code>), hojas Excel (<code>.xlsx</code>), PDF o imágenes (clic para ampliar), o adjunta archivos directamente.
+          </p>
+        </div>
+
+        <div id="workspace-grid" class="workspace">
+          <!-- 1. ÁREA DE PREVISUALIZACIÓN (espacio principal) -->
+          <section class="preview-stage" aria-labelledby="preview-heading">
+            <div class="preview-stage__header">
+              <div class="preview-stage__heading-group">
+                <div class="preview-stage__meta-row">
+                  <span id="preview-annex-code" class="preview-stage__code">Apartado 1</span>
+                  <span id="preview-page-badge" class="preview-stage__page-badge tabular-nums">Pág. ___</span>
+                </div>
+                <h3 id="preview-heading" class="preview-stage__title">1. Planeación de actividades</h3>
+                <ul id="preview-subtitles-list" class="preview-subtitles" hidden></ul>
+              </div>
+
+              <div class="preview-stage__toolbar">
+                <button
+                  id="projection-mode-btn"
+                  type="button"
+                  class="btn-outline-sm"
+                  aria-pressed="false"
+                  title="Ampliar visor y aumentar escala tipográfica para proyección"
+                >
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15" aria-hidden="true">
+                    <path d="M3 7V4h3M14 4h3v3M17 13v3h-3M6 16H3v-3" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  <span id="projection-mode-label">Modo proyección</span>
+                </button>
+
+                <div id="zoom-controls" class="zoom-controls" hidden>
+                  <button id="zoom-out-btn" type="button" class="btn-icon" aria-label="Reducir zoom" title="Alejar">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
+                      <path d="M5 10h10" stroke-linecap="round" />
+                    </svg>
+                  </button>
+                  <span id="zoom-level-label" class="zoom-level tabular-nums">100%</span>
+                  <button id="zoom-in-btn" type="button" class="btn-icon" aria-label="Aumentar zoom" title="Acercar">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
+                      <path d="M10 5v10M5 10h10" stroke-linecap="round" />
+                    </svg>
+                  </button>
+                  <button id="zoom-reset-btn" type="button" class="btn-ghost-xs">100%</button>
+                </div>
+
+                <button
+                  id="toggle-drawer-btn"
+                  type="button"
+                  class="btn-outline-sm"
+                  aria-expanded="true"
+                  aria-controls="annex-drawer"
+                >
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15" aria-hidden="true">
+                    <path d="M4 5h12M4 10h12M4 15h8" stroke-linecap="round" />
+                  </svg>
+                  <span id="toggle-drawer-label">Ocultar panel</span>
+                </button>
+
+                <a
+                  id="preview-open-tab-link"
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn-outline-sm"
+                  hidden
+                >
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15" aria-hidden="true">
+                    <path d="M11 4h5v5M16 4l-7 7M8 6H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-3" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  <span>Abrir pestaña</span>
+                </a>
+
+                <a id="preview-download-link" href="#" download class="btn-download" hidden>
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
+                    <path d="M10 3v10m0 0l-4-4m4 4l4-4M4 16h12" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  <span>Descargar</span>
+                </a>
+              </div>
+            </div>
+
+            <div id="preview-viewport" class="preview-viewport" tabindex="0">
+              <!-- Marca de agua institucional del SENA centrada en el área de previsualización -->
+              <div class="sena-watermark sena-watermark--stage" aria-hidden="true">
+                <svg viewBox="0 0 260 280" fill="none" xmlns="http://www.w3.org/2000/svg" class="sena-watermark__svg">
+                  <text
+                    x="130"
+                    y="46"
+                    text-anchor="middle"
+                    font-family="'Plus Jakarta Sans', Arial, sans-serif"
+                    font-size="38"
+                    font-weight="800"
+                    letter-spacing="8"
+                    fill="currentColor"
+                  >
+                    SENA
+                  </text>
+                  <circle cx="130" cy="92" r="22" fill="currentColor" />
+                  <path d="M36 122H112L66 204L44 190L76 138H36V122Z" fill="currentColor" />
+                  <path d="M224 122H148L194 204L216 190L184 138H224V122Z" fill="currentColor" />
+                  <path d="M130 142L84 224L104 236L130 190L156 236L176 224L130 142Z" fill="currentColor" />
+                </svg>
+              </div>
+
+              <!-- Marcador visible cuando el apartado aún no tiene archivo adjunto -->
+              <div id="preview-empty" class="preview-empty">
+                <span class="preview-empty__badge">Marcador de evidencia · Pendiente por adjuntar</span>
+                <div class="preview-empty__icon" aria-hidden="true">
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" width="44" height="44">
+                    <path d="M14 6h14l10 10v24a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" stroke-linejoin="round" />
+                    <path d="M28 6v10h10" stroke-linejoin="round" />
+                    <path d="M18 25h12M18 32h8" stroke-linecap="round" />
+                  </svg>
+                </div>
+                <h4 id="preview-empty-title" class="preview-empty__title">1. Planeación de actividades</h4>
+                <p id="preview-empty-hint" class="preview-empty__desc">
+                  Este apartado aún no tiene un documento cargado. Adjunta tu archivo Word (<code>.docx</code>), Excel (<code>.xlsx</code>), PDF o imagen desde aquí o desde el panel lateral para previsualizarlo en pantalla.
+                </p>
+                <ul id="preview-empty-subtitles" class="preview-empty__subtitles" hidden></ul>
+                <div class="preview-empty__actions">
+                  <button id="empty-upload-trigger-btn" type="button" class="btn-navy-sm">
+                    Adjuntar evidencia para este apartado
+                  </button>
+                </div>
+              </div>
+
+              <!-- Contenedor activo de previsualización (Word, Excel, PowerPoint, PDF, Imagen o Video) -->
+              <div id="preview-content" class="preview-content" hidden></div>
+            </div>
+
+            <footer class="preview-stage__footer">
+              <p class="session-note">
+                <strong>Nota de informe y persistencia:</strong> Los títulos, números de página (<code>___</code>) y descripciones se conservan en <code>localStorage</code>. Los archivos subidos se previsualizan localmente con <code>URL.createObjectURL()</code> y se respaldan en <code>IndexedDB</code>; usa <strong>«Compartir / Publicar»</strong> para empaquetar o subirlos a <code>evidencias/</code>.
+              </p>
+            </footer>
+          </section>
+
+          <!-- 2. PANEL DESPLEGABLE DE DETALLE, PÁGINAS, CARGA E HISTÓRICO -->
+          <aside id="annex-drawer" class="annex-drawer" aria-label="Detalle, numeración de páginas y carga del apartado">
+            <div id="annex-drawer-inner" class="annex-drawer__inner">
+              <div class="annex-drawer__header">
+                <div>
+                  <span id="drawer-code-label" class="drawer-code">APARTADO 1 · EVIDENCIA</span>
+                  <p id="drawer-accepted-label" class="drawer-accepted">Formatos: Word (.docx), Excel (.xlsx), PDF, imágenes</p>
+                </div>
+                <button
+                  id="close-drawer-btn"
+                  type="button"
+                  class="btn-icon"
+                  aria-label="Replegar panel"
+                  title="Replegar panel"
+                >
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
+                    <path d="M7 5l5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Título del apartado + Campo de número de página ("___") -->
+              <div class="field-group">
+                <label for="annex-title-input" class="field-label">Título del apartado (editable)</label>
+                <div class="title-edit-row">
+                  <input id="annex-title-input" type="text" class="text-input" maxlength="110" autocomplete="off" />
+                  <button id="save-title-btn" type="button" class="btn-navy-sm">Guardar</button>
+                </div>
+                <p id="title-save-status" class="field-feedback" aria-live="polite"></p>
+              </div>
+
+              <div class="field-group">
+                <span class="field-label">Numeración en informe final (<code>pág. ___</code>)</span>
+                <div class="page-number-row">
+                  <label for="annex-page-input" class="page-number-label">Página principal:</label>
+                  <input
+                    id="annex-page-input"
+                    type="text"
+                    class="text-input page-number-input tabular-nums"
+                    placeholder="___"
+                    maxlength="12"
+                    autocomplete="off"
+                  />
+                </div>
+                <div id="subtitles-pages-box" class="subtitles-pages-box" hidden></div>
+              </div>
+
+              <!-- Descripción / notas del apartado -->
+              <div class="field-group">
+                <label for="annex-desc-input" class="field-label">Resumen o notas para exposición</label>
+                <textarea id="annex-desc-input" class="textarea-input" rows="2" maxlength="320"></textarea>
+              </div>
+
+              <!-- Zona de carga de archivo -->
+              <div class="field-group">
+                <span class="field-label">Documento o evidencia adjunta</span>
+
+                <div id="dropzone" class="dropzone" tabindex="0" role="region" aria-label="Zona para cargar archivo">
+                  <input id="file-input" type="file" class="sr-only" />
+                  <div class="dropzone__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="26" height="26">
+                      <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </div>
+                  <p id="dropzone-prompt" class="dropzone__title">Arrastra tu archivo aquí o selecciónalo</p>
+                  <p id="dropzone-limits" class="dropzone__meta">Máximo 2048 MB · .docx, .xlsx, .pptx, .pdf, imágenes</p>
+                  <button id="select-file-btn" type="button" class="btn-navy-outline">
+                    Seleccionar archivo
+                  </button>
+                </div>
+
+                <!-- Alerta de validación inline -->
+                <div id="upload-error" class="upload-error" role="alert" hidden></div>
+
+                <!-- Tarjeta de archivo cargado -->
+                <div id="attached-file-card" class="attached-card" hidden>
+                  <div class="attached-card__info">
+                    <span id="attached-ext-tag" class="attached-card__ext">DOCX</span>
+                    <div class="attached-card__text">
+                      <p id="attached-file-name" class="attached-card__name">documento.docx</p>
+                      <p id="attached-file-meta" class="attached-card__meta tabular-nums">1.2 MB · Sesión actual</p>
+                    </div>
+                  </div>
+                  <div class="attached-card__actions">
+                    <button id="replace-file-btn" type="button" class="btn-outline-sm">Reemplazar</button>
+                    <a id="drawer-download-link" href="#" download class="btn-outline-sm">Descargar</a>
+                    <button id="delete-file-btn" type="button" class="btn-danger-sm">Eliminar</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Control de versiones: histórico de archivos subidos -->
+              <div id="version-history-box" class="field-group version-history-box">
+                <div class="version-history__head">
+                  <span class="field-label">Histórico de versiones</span>
+                  <span id="version-history-count" class="version-history__count tabular-nums">0 versiones</span>
+                </div>
+                <ul id="version-history-list" class="version-history__list"></ul>
+                <p id="version-history-empty" class="field-hint">
+                  Cada archivo que subas o reemplaces se guardará aquí para verlo, descargarlo o restaurarlo.
+                </p>
+              </div>
+
+              <!-- URL pública opcional -->
+              <div id="public-url-box" class="field-group public-url-box">
+                <label for="public-url-input" class="field-label">URL pública opcional (Office Online / Google Docs)</label>
+                <div class="title-edit-row">
+                  <input
+                    id="public-url-input"
+                    type="url"
+                    class="text-input"
+                    placeholder="https://ejemplo.com/archivo.docx"
+                    autocomplete="off"
+                  />
+                  <button id="apply-public-url-btn" type="button" class="btn-outline-sm">Vincular</button>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <!-- 3. ÍNDICE / NAVEGACIÓN LATERAL FIJA (1–11 CON SUBTÍTULOS + ANEXOS) -->
+          <nav class="annex-rail" aria-label="Índice del portafolio">
+            <div class="annex-rail__header">
+              <div>
+                <h3 class="annex-rail__heading">Índice del Portafolio</h3>
+                <p class="annex-rail__subhint">Orden oficial · Campos pág. ___</p>
+              </div>
+              <span class="annex-rail__count tabular-nums">12 apartados</span>
+            </div>
+            <ul id="annex-buttons-list" class="annex-rail__list">
+              <!-- Generado dinámicamente desde app.js -->
+            </ul>
+          </nav>
+        </div>
+      </section>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- MODAL 1: PORTADA INSTITUCIONAL (ACCESO DIRECTO DESDE LA BARRA)      -->
+    <!-- =================================================================== -->
+    <div id="cover-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="cover-project-title" hidden>
+      <div class="cover-card cover-card--modal">
+        <button id="close-cover-modal-btn" type="button" class="btn-icon cover-modal-close" aria-label="Cerrar portada">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18" aria-hidden="true">
+            <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
+          </svg>
+        </button>
+
         <div class="cover-emblem" aria-hidden="true">
           <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="44" height="44">
             <circle cx="32" cy="14" r="6" fill="currentColor" />
@@ -74,12 +512,10 @@
         </div>
 
         <p class="cover-program">Análisis y Desarrollo de Software (ADSO)</p>
-
-        <h1 id="cover-project-title" class="cover-title">ÉCHELE CAMELLO</h1>
-
+        <h2 id="cover-project-title" class="cover-title">ÉCHELE CAMELLO</h2>
         <p class="cover-subtitle">Portafolio de Evidencias</p>
 
-        <div class="cover-group-badge" aria-label="Grupo del proyecto">
+        <div class="cover-group-badge">
           <span>Grupo 8</span>
         </div>
 
@@ -94,7 +530,7 @@
             </dd>
           </div>
           <div class="cover-meta__row">
-            <dt class="sr-only">Instructor</dt>
+            <dt class="sr-only">Instructores</dt>
             <dd class="cover-meta__instructor">
               <span class="cover-meta__label">Instructor:</span>
               José de Jesús Motta Vargas
@@ -110,339 +546,22 @@
 
         <div class="cover-actions">
           <button id="enter-portfolio-btn" type="button" class="btn-primary-cover">
-            <span>Explorar Anexos del Portafolio</span>
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18" aria-hidden="true">
-              <path d="M4 10h12M11 5l5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+            <span>Continuar a la Presentación</span>
           </button>
         </div>
       </div>
-    </section>
-
-    <!-- =================================================================== -->
-    <!-- PANTALLA 2: VISTA DE ANEXOS                                         -->
-    <!-- =================================================================== -->
-    <div id="annexes-screen" class="annexes-screen" hidden>
-      <!-- Cabecera institucional superior -->
-      <header class="top-bar">
-        <div class="top-bar__brand">
-          <button id="back-to-cover-btn" type="button" class="top-bar__back" aria-label="Volver a la portada institucional">
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
-              <path d="M15 10H5M9 5l-5 5 5 5" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            <span>Portada</span>
-          </button>
-          <span class="top-bar__sep" aria-hidden="true">/</span>
-          <span class="top-bar__title">ÉCHELE CAMELLO</span>
-          <span class="top-bar__group-pill">Grupo 8</span>
-        </div>
-
-        <nav class="top-bar__info" aria-label="Información del programa">
-          <span>Análisis y Desarrollo de Software (ADSO)</span>
-          <span aria-hidden="true">·</span>
-          <span>Neiva/Huila · 10/11/2026</span>
-          <span aria-hidden="true">·</span>
-          <span id="loaded-counter" class="tabular-nums">0 de 13 anexos cargados</span>
-        </nav>
-
-        <div class="top-bar__actions">
-          <button id="share-portfolio-btn" type="button" class="btn-navy-sm" title="Publicar o compartir tus anexos para que cualquier persona los vea">
-            Compartir / Publicar
-          </button>
-          <button id="import-package-btn" type="button" class="btn-outline-sm" title="Cargar un paquete .json compartido por otro compañero">
-            Importar paquete
-          </button>
-          <input id="import-package-input" type="file" accept=".json,application/json" class="sr-only" />
-          <button id="reset-names-btn" type="button" class="btn-ghost-sm" title="Restaurar los nombres predeterminados de los 13 anexos">
-            Restaurar nombres
-          </button>
-        </div>
-      </header>
-
-      <!-- Espacio de trabajo principal:
-           1. Área de previsualización (espacio restante)
-           2. Panel desplegable hacia la izquierda de los botones
-           3. Columna derecha de 13 botones desplegables en azul oscuro -->
-      <main class="workspace">
-        <!-- 1. ÁREA DE PREVISUALIZACIÓN -->
-        <section class="preview-stage" aria-labelledby="preview-heading">
-          <div class="preview-stage__header">
-            <div class="preview-stage__heading-group">
-              <span id="preview-annex-code" class="preview-stage__code">Anexo 1</span>
-              <h2 id="preview-heading" class="preview-stage__title">Anexo 1. Planeación de actividades</h2>
-            </div>
-
-            <div class="preview-stage__toolbar">
-              <div id="zoom-controls" class="zoom-controls" hidden>
-                <button id="zoom-out-btn" type="button" class="btn-icon" aria-label="Reducir zoom" title="Alejar">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
-                    <path d="M5 10h10" stroke-linecap="round" />
-                  </svg>
-                </button>
-                <span id="zoom-level-label" class="zoom-level tabular-nums">100%</span>
-                <button id="zoom-in-btn" type="button" class="btn-icon" aria-label="Aumentar zoom" title="Acercar">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
-                    <path d="M10 5v10M5 10h10" stroke-linecap="round" />
-                  </svg>
-                </button>
-                <button id="zoom-reset-btn" type="button" class="btn-ghost-xs">100%</button>
-              </div>
-
-              <button
-                id="toggle-drawer-btn"
-                type="button"
-                class="btn-outline-sm"
-                aria-expanded="true"
-                aria-controls="annex-drawer"
-              >
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15" aria-hidden="true">
-                  <path d="M4 5h12M4 10h12M4 15h8" stroke-linecap="round" />
-                </svg>
-                <span id="toggle-drawer-label">Ocultar panel</span>
-              </button>
-
-              <a
-                id="preview-open-tab-link"
-                href="#"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btn-outline-sm"
-                hidden
-              >
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15" aria-hidden="true">
-                  <path d="M11 4h5v5M16 4l-7 7M8 6H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-3" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <span>Abrir pestaña</span>
-              </a>
-
-              <a
-                id="preview-download-link"
-                href="#"
-                download
-                class="btn-download"
-                hidden
-              >
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
-                  <path d="M10 3v10m0 0l-4-4m4 4l4-4M4 16h12" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <span>Descargar</span>
-              </a>
-            </div>
-          </div>
-
-          <div id="preview-viewport" class="preview-viewport" tabindex="0">
-            <!-- Marca de agua institucional del SENA centrada en el área de previsualización -->
-            <div class="sena-watermark sena-watermark--stage" aria-hidden="true">
-              <svg viewBox="0 0 260 280" fill="none" xmlns="http://www.w3.org/2000/svg" class="sena-watermark__svg">
-                <text
-                  x="130"
-                  y="46"
-                  text-anchor="middle"
-                  font-family="'Plus Jakarta Sans', Arial, sans-serif"
-                  font-size="38"
-                  font-weight="800"
-                  letter-spacing="8"
-                  fill="currentColor"
-                >
-                  SENA
-                </text>
-                <circle cx="130" cy="92" r="22" fill="currentColor" />
-                <path
-                  d="M36 122H112L66 204L44 190L76 138H36V122Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M224 122H148L194 204L216 190L184 138H224V122Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M130 142L84 224L104 236L130 190L156 236L176 224L130 142Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </div>
-
-            <!-- Estado vacío cuando el anexo no tiene archivo -->
-            <div id="preview-empty" class="preview-empty">
-              <div class="preview-empty__icon" aria-hidden="true">
-                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" width="44" height="44">
-                  <path d="M14 6h14l10 10v24a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" stroke-linejoin="round" />
-                  <path d="M28 6v10h10" stroke-linejoin="round" />
-                  <path d="M18 25h12M18 32h8" stroke-linecap="round" />
-                </svg>
-              </div>
-              <h3 class="preview-empty__title">Sin archivo adjunto en este anexo</h3>
-              <p id="preview-empty-hint" class="preview-empty__desc">
-                Pulsa un botón de anexo a la derecha para desplegar su panel y cargar un documento (.pdf, .doc, .docx, .xls, .xlsx, .ppt o .pptx) para previsualizarlo y descargarlo aquí.
-              </p>
-              <div class="preview-empty__actions">
-                <button id="empty-upload-trigger-btn" type="button" class="btn-navy-sm">
-                  Seleccionar archivo para este anexo
-                </button>
-              </div>
-            </div>
-
-            <!-- Contenedor activo de previsualización (PDF, Office o Video) -->
-            <div id="preview-content" class="preview-content" hidden></div>
-          </div>
-
-          <footer class="preview-stage__footer">
-            <p class="session-note">
-              <strong>Nota técnica:</strong> Los nombres y descripciones se guardan en <code>localStorage</code>. Los archivos cargados usan <code>URL.createObjectURL()</code> para previsualización inmediata en la sesión y se respaldan automáticamente en <code>IndexedDB</code> del navegador local.
-            </p>
-          </footer>
-        </section>
-
-        <!-- 2. PANEL DESPLEGABLE HACIA LA IZQUIERDA DEL BOTÓN -->
-        <aside
-          id="annex-drawer"
-          class="annex-drawer"
-          aria-label="Detalle y carga del anexo seleccionado"
-        >
-          <div id="annex-drawer-inner" class="annex-drawer__inner">
-            <div class="annex-drawer__header">
-              <div>
-                <span id="drawer-code-label" class="drawer-code">ANEXO 1 · DOCUMENTOS</span>
-                <p id="drawer-accepted-label" class="drawer-accepted">Formatos: PDF, Word, Excel, PowerPoint</p>
-              </div>
-              <button
-                id="close-drawer-btn"
-                type="button"
-                class="btn-icon"
-                aria-label="Replegar panel del anexo"
-                title="Replegar panel"
-              >
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true">
-                  <path d="M7 5l5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </button>
-            </div>
-
-            <!-- Nombre editable persistente -->
-            <div class="field-group">
-              <label for="annex-title-input" class="field-label">Nombre del botón / anexo (editable)</label>
-              <div class="title-edit-row">
-                <input
-                  id="annex-title-input"
-                  type="text"
-                  class="text-input"
-                  maxlength="90"
-                  autocomplete="off"
-                />
-                <button id="save-title-btn" type="button" class="btn-navy-sm">Guardar</button>
-              </div>
-              <p id="title-save-status" class="field-feedback" aria-live="polite"></p>
-            </div>
-
-            <!-- Descripción editable del anexo -->
-            <div class="field-group">
-              <label for="annex-desc-input" class="field-label">Descripción de la evidencia</label>
-              <textarea
-                id="annex-desc-input"
-                class="textarea-input"
-                rows="3"
-                maxlength="320"
-              ></textarea>
-            </div>
-
-            <!-- Zona de carga de archivo -->
-            <div class="field-group">
-              <span class="field-label">Archivo adjunto</span>
-
-              <div id="dropzone" class="dropzone" tabindex="0" role="region" aria-label="Zona para cargar archivo">
-                <input id="file-input" type="file" class="sr-only" />
-                <div class="dropzone__icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="26" height="26">
-                    <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke-linecap="round" stroke-linejoin="round" />
-                    <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                </div>
-                <p id="dropzone-prompt" class="dropzone__title">Arrastra tu archivo aquí o selecciónalo</p>
-                <p id="dropzone-limits" class="dropzone__meta">Máximo 2048 MB · .pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx, imágenes</p>
-                <button id="select-file-btn" type="button" class="btn-navy-outline">
-                  Seleccionar archivo
-                </button>
-              </div>
-
-              <!-- Alerta de validación inline -->
-              <div id="upload-error" class="upload-error" role="alert" hidden></div>
-
-              <!-- Tarjeta de archivo cargado con acciones Reemplazar / Eliminar / Descargar -->
-              <div id="attached-file-card" class="attached-card" hidden>
-                <div class="attached-card__info">
-                  <span id="attached-ext-tag" class="attached-card__ext">PDF</span>
-                  <div class="attached-card__text">
-                    <p id="attached-file-name" class="attached-card__name">documento.pdf</p>
-                    <p id="attached-file-meta" class="attached-card__meta tabular-nums">1.2 MB · Sesión actual</p>
-                  </div>
-                </div>
-                <div class="attached-card__actions">
-                  <button id="replace-file-btn" type="button" class="btn-outline-sm">Reemplazar</button>
-                  <a id="drawer-download-link" href="#" download class="btn-outline-sm">Descargar</a>
-                  <button id="delete-file-btn" type="button" class="btn-danger-sm">Eliminar</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Control de versiones: histórico de archivos subidos para este anexo -->
-            <div id="version-history-box" class="field-group version-history-box">
-              <div class="version-history__head">
-                <span class="field-label">Histórico de versiones</span>
-                <span id="version-history-count" class="version-history__count tabular-nums">0 versiones</span>
-              </div>
-              <ul id="version-history-list" class="version-history__list"></ul>
-              <p id="version-history-empty" class="field-hint">
-                Aún no hay versiones. Cada archivo que subas o reemplaces quedará guardado aquí para verlo, descargarlo o restaurarlo.
-              </p>
-              <p class="field-hint">
-                «Eliminar» quita solo el archivo actual; sus versiones siguen en el histórico y puedes restaurarlas.
-              </p>
-            </div>
-
-            <!-- Opción adicional para previsualizar Office desde URL pública (Office Online / Google Docs) -->
-            <div id="public-url-box" class="field-group public-url-box">
-              <label for="public-url-input" class="field-label">URL pública opcional (Visor Office Online / Google Docs)</label>
-              <div class="title-edit-row">
-                <input
-                  id="public-url-input"
-                  type="url"
-                  class="text-input"
-                  placeholder="https://ejemplo.com/archivo.docx"
-                  autocomplete="off"
-                />
-                <button id="apply-public-url-btn" type="button" class="btn-outline-sm">Vincular</button>
-              </div>
-              <p class="field-hint">
-                Los archivos locales (.docx, .xlsx, .pptx) se previsualizan directamente aquí. Si además deseas abrirlos con Microsoft Office Online o Google Docs Viewer, pega su URL pública HTTPS.
-              </p>
-            </div>
-          </div>
-        </aside>
-
-        <!-- 3. COLUMNA DERECHA DE 13 BOTONES AZUL OSCURO DESPLEGABLES -->
-        <nav class="annex-rail" aria-label="Navegación de los 13 anexos">
-          <div class="annex-rail__header">
-            <div>
-              <h2 class="annex-rail__heading">Anexos del Portafolio</h2>
-              <p class="annex-rail__subhint">Pulsa un botón para desplegar hacia la izquierda</p>
-            </div>
-            <span class="annex-rail__count tabular-nums">13 evidencias</span>
-          </div>
-          <ul id="annex-buttons-list" class="annex-rail__list">
-            <!-- Generado dinámicamente desde app.js -->
-          </ul>
-        </nav>
-      </main>
     </div>
 
-    <!-- Modal para compartir / publicar los anexos para cualquier persona -->
+    <!-- =================================================================== -->
+    <!-- MODAL 2: COMPARTIR / PUBLICAR PORTAFOLIO                            -->
+    <!-- =================================================================== -->
     <div id="share-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="share-modal-title" hidden>
       <div class="modal-card">
         <div class="modal-card__head">
           <div>
-            <h2 id="share-modal-title" class="modal-card__title">Compartir y publicar anexos para todos</h2>
+            <h2 id="share-modal-title" class="modal-card__title">Compartir y publicar evidencias para todos</h2>
             <p class="modal-card__desc">
-              Los archivos que subes aquí se guardan solo en tu navegador. Usa una de estas opciones para que tu instructor o compañeros los vean en cualquier computador:
+              Los archivos que subes aquí se guardan en tu navegador. Usa una de estas opciones para que tu instructor o compañeros los vean en cualquier computador:
             </p>
           </div>
           <button id="close-share-modal-btn" type="button" class="btn-icon" aria-label="Cerrar ventana">
@@ -455,7 +574,7 @@
         <div class="share-option-box">
           <h3 class="share-option-box__title">Opción 1: Archivo portátil para enviar por WhatsApp / Drive / Correo</h3>
           <p class="share-option-box__text">
-            Empaqueta todos tus anexos cargados (títulos, descripciones y archivos) en un solo archivo <code>.json</code>. Cualquier persona abre el enlace de la página, pulsa <strong>«Importar paquete»</strong> y verá todo al instante.
+            Empaqueta tus apartados, números de página y archivos en un único <code>.json</code>. Cualquier persona abre el enlace, pulsa <strong>«Importar paquete»</strong> y verá todo al instante.
           </p>
           <div class="share-option-box__actions">
             <button id="export-package-btn" type="button" class="btn-navy-sm">
@@ -465,9 +584,9 @@
         </div>
 
         <div class="share-option-box">
-          <h3 class="share-option-box__title">Opción 2: Publicar fijo en GitHub Pages (para que todos lo vean sin importar nada)</h3>
+          <h3 class="share-option-box__title">Opción 2: Publicar fijo en GitHub Pages (<code>evidencias/</code>)</h3>
           <p class="share-option-box__text">
-            Descarga el archivo <code>manifest.json</code> (y copia tus archivos de anexos en la carpeta <code>evidencias/</code> del repositorio). Al subir esa carpeta a GitHub, cualquier persona verá y previsualizará los 13 anexos automáticamente al abrir <code>luistombe.github.io/Pagina-Motta</code>.
+            Descarga <code>manifest.json</code>, <code>manifest.js</code> y los archivos cargados para copiarlos en <code>evidencias/</code> del repositorio y subirlos a GitHub.
           </p>
           <div class="share-option-box__actions">
             <button id="export-manifest-btn" type="button" class="btn-outline-sm">
@@ -480,8 +599,27 @@
       </div>
     </div>
 
+    <!-- =================================================================== -->
+    <!-- MODAL 3: LIGHTBOX DE AMPLIACIÓN DE IMÁGENES AL HACER CLIC           -->
+    <!-- =================================================================== -->
+    <div id="image-lightbox" class="lightbox-backdrop" role="dialog" aria-modal="true" aria-labelledby="lightbox-caption" hidden>
+      <div class="lightbox-toolbar">
+        <span id="lightbox-caption" class="lightbox-caption">Imagen ampliada</span>
+        <div class="lightbox-actions">
+          <button id="lightbox-zoom-out" type="button" class="btn-outline-sm">- Zoom</button>
+          <span id="lightbox-zoom-label" class="lightbox-zoom-label tabular-nums">100%</span>
+          <button id="lightbox-zoom-in" type="button" class="btn-outline-sm">+ Zoom</button>
+          <button id="lightbox-zoom-reset" type="button" class="btn-outline-sm">Ajustar</button>
+          <button id="lightbox-close-btn" type="button" class="btn-navy-sm">Cerrar (Esc)</button>
+        </div>
+      </div>
+      <div id="lightbox-stage" class="lightbox-stage">
+        <img id="lightbox-img" class="lightbox-img" src="" alt="Vista ampliada" />
+      </div>
+    </div>
+
     <!-- Manifiesto de evidencias publicadas y script principal en JavaScript puro -->
-    <script src="./evidencias/manifest.js?v=20261117g" defer></script>
-    <script src="./app.js?v=20261117g" defer></script>
+    <script src="./evidencias/manifest.js?v=20261123a" defer></script>
+    <script src="./app.js?v=20261123a" defer></script>
   </body>
 </html>
