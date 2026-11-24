@@ -1,6 +1,114 @@
-// Respaldo de manifiesto para abrir index.html localmente sin servidor (file://)
 window.ADSO_PUBLISHED_MANIFEST = {
-  version: 1,
-  updatedAt: '2026-11-17T13:30:00Z',
-  annexes: [],
+  "version": 1,
+  "updatedAt": "2026-11-24T05:38:07.740Z",
+  "annexes": [
+    {
+      "id": "1",
+      "title": "1. Planeación de actividades",
+      "description": "",
+      "fileName": "1. Taller Planeación y Análisis de Actividades.docx",
+      "path": "./evidencias/anexo-01-planeacion-actividades.docx",
+      "size": 42007,
+      "ext": "docx"
+    },
+    {
+      "id": "2",
+      "title": "2. Diagramas de casos de uso",
+      "description": "",
+      "fileName": "2. Diagramas de Casos de Uso - Échele Camello.docx",
+      "path": "./evidencias/anexo-02-diagramas-casos-de-uso.docx",
+      "size": 2332497,
+      "ext": "docx"
+    },
+    {
+      "id": "3",
+      "title": "3. Diagramas de actividad",
+      "description": "",
+      "fileName": "3. Diagramas de Actividades Completas.docx",
+      "path": "./evidencias/anexo-03-diagramas-actividad.docx",
+      "size": 1172152,
+      "ext": "docx"
+    },
+    {
+      "id": "4",
+      "title": "4. Diagrama de dominio",
+      "description": "",
+      "fileName": "4. Diagrama de Dominio - Échele Camello.jpg",
+      "path": "./evidencias/anexo-04-diagrama-dominio.jpg",
+      "size": 142913,
+      "ext": "jpg"
+    },
+    {
+      "id": "5",
+      "title": "5. Taller de bases de datos",
+      "description": "",
+      "fileName": "5. Taller BD - Modelo Conceptual Échele Camello.docx",
+      "path": "./evidencias/anexo-05-taller-bases-de-datos.docx",
+      "size": 934605,
+      "ext": "docx"
+    },
+    {
+      "id": "6",
+      "title": "6. Verificación de modelos y elaboración de prototipos",
+      "description": "",
+      "fileName": "6. Prototipo Échele Camello.docx",
+      "path": "./evidencias/anexo-06-prototipo-echele-camello.docx",
+      "size": 225717,
+      "ext": "docx"
+    },
+    {
+      "id": "7",
+      "title": "7. Taller general",
+      "description": "",
+      "fileName": "7. TALLER FINAL ARQUITECTURA.docx",
+      "path": "./evidencias/anexo-07-taller-final-arquitectura.docx",
+      "size": 15411668,
+      "ext": "docx"
+    },
+    {
+      "id": "8",
+      "title": "8. Hardware",
+      "description": "",
+      "fileName": "8. Hardware para Informe Técnico - Échele Camello.docx",
+      "path": "./evidencias/anexo-08-hardware-informe-tecnico.docx",
+      "size": 2288857,
+      "ext": "docx"
+    },
+    {
+      "id": "9",
+      "title": "9. Licencias",
+      "description": "",
+      "fileName": "9. Otros tipos de licencias - investigación.docx",
+      "path": "./evidencias/anexo-09-licencias-investigacion.docx",
+      "size": 1512469,
+      "ext": "docx"
+    },
+    {
+      "id": "10",
+      "title": "10. Software",
+      "description": "",
+      "fileName": "10. Cotización Software Échele Camello.xlsx",
+      "path": "./evidencias/anexo-10-cotizacion-software.xlsx",
+      "size": 170627,
+      "ext": "xlsx"
+    },
+    {
+      "id": "11",
+      "title": "11. Recursos humanos",
+      "description": "",
+      "fileName": "11. Cotización Recursos Humanos.xlsm",
+      "path": "./evidencias/anexo-11-cotizacion-recursos-humanos.xlsm",
+      "size": 46011,
+      "ext": "xlsm"
+    },
+    {
+      "id": "12",
+      "title": "Anexos",
+      "description": "",
+      "fileName": "SRS_Echele_Camello_Version_Consolidada_Corregida_2026.docx",
+      "path": "./evidencias/anexo-12-srs-consolidado-2026.docx",
+      "size": 4647290,
+      "ext": "docx"
+    }
+  ]
 };

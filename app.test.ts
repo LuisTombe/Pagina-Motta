@@ -202,3 +202,23 @@ test('ECHELE_REPORT_DATA: omite puntos sin respaldo (10 y 15), deja Anexos al fi
     assert.equal(fs.existsSync(abs), true, `Falta imagen referenciada: ${rel}`);
   }
 });
+
+test('evidencias/manifest.json publica los 12 anexos (incluyendo 7 y 8) y admite .xlsm', () => {
+  assert.equal(getPreviewCategory('xlsm'), 'office');
+  assert.equal(validateFileForAnnex(DEFAULT_ANNEXES[10], { name: 'rrhh.xlsm', size: 1024 }).valid, true);
+
+  const manifestRaw = fs.readFileSync(path.join(process.cwd(), 'evidencias', 'manifest.json'), 'utf8');
+  const manifest = JSON.parse(manifestRaw);
+  assert.ok(Array.isArray(manifest.annexes));
+  assert.equal(manifest.annexes.length, 12);
+
+  const ids = manifest.annexes.map((a: any) => a.id);
+  for (let i = 1; i <= 12; i++) {
+    assert.equal(ids.includes(String(i)), true, `Falta anexo ${i} en manifest.json`);
+  }
+  for (const item of manifest.annexes) {
+    const abs = path.join(process.cwd(), item.path);
+    assert.equal(fs.existsSync(abs), true, `Falta archivo publicado: ${item.path}`);
+    assert.ok(fs.statSync(abs).size > 0, `Archivo vacío: ${item.path}`);
+  }
+});

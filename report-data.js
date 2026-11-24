@@ -849,7 +849,7 @@
       tag: 'Archivos 1–12',
       isAnnexWorkspace: true,
       lead:
-        'Espacio interactivo para consultar, adjuntar, previsualizar (.docx, .xlsx, .pptx, .pdf, imágenes), versionar y compartir los 11 anexos y el apartado de Anexos. Los puntos 7 y 8 muestran la síntesis documental cargada mientras adjuntas sus archivos definitivos.',
+        'Espacio interactivo con los 12 apartados oficiales precargados (incluyendo el Taller Final de Arquitectura en Anexo 7 y el Diagnóstico de Hardware en Anexo 8), listos para previsualizar (.docx, .xlsx, .xlsm, .pdf, imágenes), versionar o reemplazar.',
     },
   ];
 

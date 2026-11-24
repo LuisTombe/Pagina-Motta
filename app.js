@@ -24,8 +24,8 @@ const IDB_CONFIG = {
 };
 
 const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'];
-const DOCUMENT_EXTENSIONS = ['doc', 'docx', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx', ...IMAGE_EXTENSIONS];
-const OFFICE_EXTENSIONS = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+const DOCUMENT_EXTENSIONS = ['doc', 'docx', 'pdf', 'xls', 'xlsx', 'xlsm', 'ppt', 'pptx', ...IMAGE_EXTENSIONS];
+const OFFICE_EXTENSIONS = ['doc', 'docx', 'xls', 'xlsx', 'xlsm', 'ppt', 'pptx'];
 const VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'avi', 'mkv'];
 
 const MAX_DOCUMENT_BYTES = 2048 * 1024 * 1024; // 2048 MB (2 GB) para admitir portafolios y documentos pesados
@@ -810,35 +810,49 @@ function formatExcelSerialDate(serial) {
   return `${d}/${m}/${y}`;
 }
 
+function getByLocalTag(root, localName) {
+  if (!root) return [];
+  if (typeof root.getElementsByTagNameNS === 'function') {
+    const nsNodes = Array.from(root.getElementsByTagNameNS('*', localName));
+    if (nsNodes.length > 0) return nsNodes;
+  }
+  return typeof root.getElementsByTagName === 'function'
+    ? Array.from(root.getElementsByTagName(localName))
+    : [];
+}
+
 function parseExcelStyles(stylesXml, parser) {
   if (!stylesXml) return [];
   const doc = parser.parseFromString(stylesXml, 'application/xml');
 
-  const fonts = Array.from(doc.querySelectorAll('fonts > font')).map((fontEl) => {
-    const bold = Boolean(fontEl.getElementsByTagName('b')[0]);
-    const italic = Boolean(fontEl.getElementsByTagName('i')[0]);
-    const colorEl = fontEl.getElementsByTagName('color')[0];
+  const fontsContainer = getByLocalTag(doc, 'fonts')[0] || doc;
+  const fonts = getByLocalTag(fontsContainer, 'font').map((fontEl) => {
+    const bold = Boolean(getByLocalTag(fontEl, 'b')[0]);
+    const italic = Boolean(getByLocalTag(fontEl, 'i')[0]);
+    const colorEl = getByLocalTag(fontEl, 'color')[0];
     const rgb = colorEl ? normalizeArgbToCss(colorEl.getAttribute('rgb')) : '';
     const textColor = rgb && rgb.toUpperCase() !== '#000000' ? rgb : '';
     return { bold, italic, textColor };
   });
 
-  const fills = Array.from(doc.querySelectorAll('fills > fill')).map((fillEl) => {
-    const pattern = fillEl.getElementsByTagName('patternFill')[0];
+  const fillsContainer = getByLocalTag(doc, 'fills')[0] || doc;
+  const fills = getByLocalTag(fillsContainer, 'fill').map((fillEl) => {
+    const pattern = getByLocalTag(fillEl, 'patternFill')[0];
     if (!pattern) return '';
     const patternType = pattern.getAttribute('patternType') || '';
     if (patternType === 'none' || patternType === 'gray125') return '';
-    const fg = pattern.getElementsByTagName('fgColor')[0];
+    const fg = getByLocalTag(pattern, 'fgColor')[0];
     const bgColor = fg ? normalizeArgbToCss(fg.getAttribute('rgb')) : '';
     if (!bgColor || bgColor.toUpperCase() === '#FFFFFF' || bgColor.toUpperCase() === '#000000') return '';
     return bgColor;
   });
 
-  const xfs = Array.from(doc.querySelectorAll('cellXfs > xf')).map((xf) => {
+  const cellXfsContainer = getByLocalTag(doc, 'cellXfs')[0] || doc;
+  const xfs = getByLocalTag(cellXfsContainer, 'xf').map((xf) => {
     const fontId = Number(xf.getAttribute('fontId') || 0);
     const fillId = Number(xf.getAttribute('fillId') || 0);
     const numFmtId = Number(xf.getAttribute('numFmtId') || 0);
-    const alignmentEl = xf.getElementsByTagName('alignment')[0];
+    const alignmentEl = getByLocalTag(xf, 'alignment')[0];
     const align = alignmentEl ? alignmentEl.getAttribute('horizontal') || '' : '';
     const font = fonts[fontId] || {};
     const bgColor = fills[fillId] || '';
@@ -861,7 +875,7 @@ async function resolveExcelSheets(entries, parser) {
     const wbDoc = parser.parseFromString(wbXml, 'application/xml');
     const relMap = await parseOfficeRels(entries, 'xl/_rels/workbook.xml.rels', 'xl', parser);
     const sheets = [];
-    Array.from(wbDoc.getElementsByTagName('sheet')).forEach((sheetEl, idx) => {
+    getByLocalTag(wbDoc, 'sheet').forEach((sheetEl, idx) => {
       const name = sheetEl.getAttribute('name') || `Hoja ${idx + 1}`;
       const rId = sheetEl.getAttribute('r:id') || sheetEl.getAttribute('id') || '';
       const targetPath = relMap.get(rId);
@@ -892,7 +906,7 @@ function buildExcelSheetGrid(sDoc, sharedStrings, cellStyles) {
   const MAX_RENDER_ROWS = 400;
   const MAX_RENDER_COLS = 40;
 
-  Array.from(sDoc.getElementsByTagName('mergeCell')).forEach((mc) => {
+  getByLocalTag(sDoc, 'mergeCell').forEach((mc) => {
     const ref = mc.getAttribute('ref') || '';
     const parts = ref.split(':');
     if (parts.length !== 2) return;
@@ -915,13 +929,13 @@ function buildExcelSheetGrid(sDoc, sharedStrings, cellStyles) {
     maxCol = Math.max(maxCol, cappedEndCol);
   });
 
-  const rows = Array.from(sDoc.getElementsByTagName('row'));
+  const rows = getByLocalTag(sDoc, 'row');
   rows.forEach((rowEl, rFallback) => {
     const rowAttr = rowEl.getAttribute('r');
     const rowIdx = rowAttr ? Number(rowAttr) - 1 : rFallback;
     if (rowIdx < 0 || rowIdx >= MAX_RENDER_ROWS) return;
 
-    const cNodes = Array.from(rowEl.getElementsByTagName('c'));
+    const cNodes = getByLocalTag(rowEl, 'c');
     cNodes.forEach((cEl, cFallback) => {
       const pos = parseCellReference(cEl.getAttribute('r'), rowIdx, cFallback);
       if (pos.row < 0 || pos.col < 0 || pos.row >= MAX_RENDER_ROWS || pos.col >= MAX_RENDER_COLS) return;
@@ -929,8 +943,8 @@ function buildExcelSheetGrid(sDoc, sharedStrings, cellStyles) {
       const type = cEl.getAttribute('t') || '';
       const styleIdx = Number(cEl.getAttribute('s') || 0);
       const style = cellStyles[styleIdx] || null;
-      const vNode = cEl.getElementsByTagName('v')[0];
-      const isNode = cEl.getElementsByTagName('is')[0];
+      const vNode = getByLocalTag(cEl, 'v')[0];
+      const isNode = getByLocalTag(cEl, 'is')[0];
 
       let text = '';
       let isNumeric = false;
@@ -938,7 +952,7 @@ function buildExcelSheetGrid(sDoc, sharedStrings, cellStyles) {
       if (type === 's' && vNode) {
         text = sharedStrings[Number(vNode.textContent || 0)] ?? '';
       } else if (type === 'inlineStr' && isNode) {
-        const tNodes = Array.from(isNode.getElementsByTagName('t'));
+        const tNodes = getByLocalTag(isNode, 't');
         text = tNodes.length > 0 ? tNodes.map((t) => t.textContent || '').join('') : isNode.textContent || '';
       } else if (type === 'str' || type === 'e') {
         text = vNode ? vNode.textContent || '' : '';
@@ -1064,13 +1078,13 @@ async function renderLocalOfficePreview(file, ext, container) {
       return;
     }
 
-    if (ext === 'xlsx') {
+    if (ext === 'xlsx' || ext === 'xlsm') {
       const sharedXml = await readZipEntryText(entries, 'xl/sharedStrings.xml');
       const sharedStrings = [];
       if (sharedXml) {
         const sDoc = parser.parseFromString(sharedXml, 'application/xml');
-        Array.from(sDoc.getElementsByTagName('si')).forEach((si) => {
-          const parts = Array.from(si.getElementsByTagName('t')).map((t) => t.textContent || '');
+        getByLocalTag(sDoc, 'si').forEach((si) => {
+          const parts = getByLocalTag(si, 't').map((t) => t.textContent || '');
           sharedStrings.push(parts.join(''));
         });
       }
@@ -1488,7 +1502,7 @@ function initPortfolioApp() {
           ext,
           objectUrl,
           publicUrl: prev ? prev.publicUrl : '',
-          officeEngine: ['docx', 'xlsx', 'pptx'].includes(ext) ? 'local' : 'officeOnline',
+          officeEngine: ['docx', 'xlsx', 'xlsm', 'pptx'].includes(ext) ? 'local' : 'officeOnline',
         });
       }
     });
@@ -1560,7 +1574,7 @@ function initPortfolioApp() {
           publishedPath: item.path || '',
           isPublished: true,
           loadingPublished: false,
-          officeEngine: ['docx', 'xlsx', 'pptx'].includes(ext) ? 'local' : 'officeOnline',
+          officeEngine: ['docx', 'xlsx', 'xlsm', 'pptx'].includes(ext) ? 'local' : 'officeOnline',
         });
         changed = true;
       }
@@ -2629,7 +2643,7 @@ function initPortfolioApp() {
     // 3. Previsualización de Office (.doc, .docx, .xls, .xlsx, .ppt, .pptx)
     // Soporta vista interactiva integrada + Microsoft Office Online + Google Docs Viewer
     const urls = buildOfficeViewerUrls(attached.publicUrl);
-    const canLocalParse = Boolean(attached.file && ['docx', 'xlsx', 'pptx'].includes(attached.ext));
+    const canLocalParse = Boolean(attached.file && ['docx', 'xlsx', 'xlsm', 'pptx'].includes(attached.ext));
     let defaultEngine = attached.officeEngine || (canLocalParse ? 'local' : urls ? 'officeOnline' : 'summary');
     if (defaultEngine === 'local' && !canLocalParse) {
       defaultEngine = urls ? 'officeOnline' : 'summary';
@@ -2788,7 +2802,7 @@ function initPortfolioApp() {
           ext: rec.ext,
           objectUrl: URL.createObjectURL(rec.file),
           publicUrl: '',
-          officeEngine: ['docx', 'xlsx', 'pptx'].includes(rec.ext) ? 'local' : 'officeOnline',
+          officeEngine: ['docx', 'xlsx', 'xlsm', 'pptx'].includes(rec.ext) ? 'local' : 'officeOnline',
         },
       };
     }
@@ -2813,7 +2827,7 @@ function initPortfolioApp() {
       ext: rec.ext,
       objectUrl: URL.createObjectURL(rec.file),
       publicUrl: existing ? existing.publicUrl : '',
-      officeEngine: ['docx', 'xlsx', 'pptx'].includes(rec.ext) ? 'local' : 'officeOnline',
+      officeEngine: ['docx', 'xlsx', 'xlsm', 'pptx'].includes(rec.ext) ? 'local' : 'officeOnline',
       versionId: null,
     };
     state.sessionFiles.set(rec.annexId, entry);
@@ -2962,7 +2976,7 @@ function initPortfolioApp() {
     }
 
     const objectUrl = URL.createObjectURL(file);
-    const defaultOfficeEngine = ['docx', 'xlsx', 'pptx'].includes(validation.extension)
+    const defaultOfficeEngine = ['docx', 'xlsx', 'xlsm', 'pptx'].includes(validation.extension)
       ? 'local'
       : 'officeOnline';
 
@@ -3509,7 +3523,7 @@ function initPortfolioApp() {
             ext,
             objectUrl: URL.createObjectURL(restoredFile),
             publicUrl: item.publicUrl || '',
-            officeEngine: ['docx', 'xlsx', 'pptx'].includes(ext) ? 'local' : 'officeOnline',
+            officeEngine: ['docx', 'xlsx', 'xlsm', 'pptx'].includes(ext) ? 'local' : 'officeOnline',
             versionId: null,
           };
           state.sessionFiles.set(annexId, entry);
