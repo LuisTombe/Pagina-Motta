@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import './report-data.js';
 import './app.js';
 
 const {
@@ -163,4 +166,39 @@ test('excel: colIndexToLetter genera referencias de columna correctas', () => {
   assert.equal(colIndexToLetter(25), 'Z');
   assert.equal(colIndexToLetter(26), 'AA');
   assert.equal(colIndexToLetter(27), 'AB');
+});
+
+test('ECHELE_REPORT_DATA: omite puntos sin respaldo (10 y 15), deja Anexos al final y todas sus imágenes existen', () => {
+  const { REPORT_SECTIONS, ANNEX_FALLBACK_SUMMARIES } = (globalThis as any).ECHELE_REPORT_DATA;
+  assert.ok(Array.isArray(REPORT_SECTIONS) && REPORT_SECTIONS.length >= 16);
+
+  const ids = REPORT_SECTIONS.map((s: any) => s.id);
+  assert.equal(ids.includes('sec-10'), false);
+  assert.equal(ids.includes('sec-15'), false);
+
+  const last = REPORT_SECTIONS[REPORT_SECTIONS.length - 1];
+  assert.equal(last.id, 'anexos');
+  assert.equal(last.isAnnexWorkspace, true);
+
+  assert.ok(ANNEX_FALLBACK_SUMMARIES['7']);
+  assert.ok(ANNEX_FALLBACK_SUMMARIES['8']);
+
+  const imageRefs: string[] = [];
+  for (const sec of REPORT_SECTIONS) {
+    if (Array.isArray(sec.gallery)) sec.gallery.forEach((g: any) => imageRefs.push(g.src));
+    if (Array.isArray(sec.interactiveTabs)) {
+      sec.interactiveTabs.forEach((t: any) => {
+        if (Array.isArray(t.gallery)) t.gallery.forEach((g: any) => imageRefs.push(g.src));
+      });
+    }
+  }
+  Object.values(ANNEX_FALLBACK_SUMMARIES).forEach((fb: any) => {
+    if (Array.isArray(fb.gallery)) fb.gallery.forEach((g: any) => imageRefs.push(g.src));
+  });
+
+  assert.ok(imageRefs.length >= 35, 'Debe incluir los diagramas y fotos extraídos');
+  for (const rel of imageRefs) {
+    const abs = path.join(process.cwd(), rel);
+    assert.equal(fs.existsSync(abs), true, `Falta imagen referenciada: ${rel}`);
+  }
 });

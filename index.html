@@ -102,11 +102,14 @@
             </div>
             <div class="hero-header__actions">
               <a href="#portfolio-workspace" class="btn-primary-cover">
-                <span>Ir a los Anexos del Portafolio</span>
+                <span>Explorar Informe Técnico</span>
                 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18" aria-hidden="true">
                   <path d="M10 4v12m0 0l-5-5m5 5l5-5" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               </a>
+              <button id="jump-to-anexos-btn" type="button" class="btn-outline-sm">
+                <span>Ir a Anexos (Punto 20)</span>
+              </button>
             </div>
           </div>
 
@@ -210,11 +213,11 @@
           <div>
             <span class="workspace-banner__eyebrow">EXPLORADOR PARA PROYECCIÓN · ALTA DEFINICIÓN</span>
             <h2 id="portfolio-section-heading" class="workspace-banner__title">
-              Estructura del Portafolio de Evidencias
+              Informe Técnico &amp; Portafolio de Evidencias
             </h2>
           </div>
           <p class="workspace-banner__hint">
-            Selecciona cualquier apartado en el índice derecho para previsualizar documentos Word (<code>.docx</code>), hojas Excel (<code>.xlsx</code>), PDF o imágenes (clic para ampliar), o adjunta archivos directamente.
+            Selecciona cualquier punto en el índice derecho para mostrar al instante su síntesis ejecutiva, tablas e imágenes, o abre el punto final (<strong>20. Anexos</strong>) para adjuntar y previsualizar documentos Word (<code>.docx</code>), Excel (<code>.xlsx</code>), PDF e imágenes.
           </p>
         </div>
 
@@ -227,7 +230,7 @@
                   <span id="preview-annex-code" class="preview-stage__code">Apartado 1</span>
                   <span id="preview-page-badge" class="preview-stage__page-badge tabular-nums">Pág. ___</span>
                 </div>
-                <h3 id="preview-heading" class="preview-stage__title">1. Planeación de actividades</h3>
+                <h3 id="preview-heading" class="preview-stage__title">1. Control de Versiones</h3>
                 <ul id="preview-subtitles-list" class="preview-subtitles" hidden></ul>
               </div>
 
@@ -296,6 +299,12 @@
               </div>
             </div>
 
+            <!-- Subnavegación horizontal de Anexos 1–12 (visible solo en el punto 20. Anexos) -->
+            <div id="annex-subnav-bar" class="annex-subnav-bar" aria-label="Apartados de Anexos" hidden></div>
+
+            <!-- Vista ejecutiva inmediata de cada punto del Informe Técnico -->
+            <div id="report-stage-body" class="report-stage-body" hidden></div>
+
             <div id="preview-viewport" class="preview-viewport" tabindex="0">
               <!-- Marca de agua institucional del SENA centrada en el área de previsualización -->
               <div class="sena-watermark sena-watermark--stage" aria-hidden="true">
@@ -339,6 +348,7 @@
                     Adjuntar evidencia para este apartado
                   </button>
                 </div>
+                <div id="preview-empty-fallback" class="annex-fallback-summary" hidden></div>
               </div>
 
               <!-- Contenedor activo de previsualización (Word, Excel, PowerPoint, PDF, Imagen o Video) -->
@@ -473,14 +483,14 @@
             </div>
           </aside>
 
-          <!-- 3. ÍNDICE / NAVEGACIÓN LATERAL FIJA (1–11 CON SUBTÍTULOS + ANEXOS) -->
-          <nav class="annex-rail" aria-label="Índice del portafolio">
+          <!-- 3. ÍNDICE / NAVEGACIÓN LATERAL FIJA (INFORME TÉCNICO + ANEXOS AL FINAL) -->
+          <nav class="annex-rail" aria-label="Índice del Informe Técnico">
             <div class="annex-rail__header">
               <div>
-                <h3 class="annex-rail__heading">Índice del Portafolio</h3>
-                <p class="annex-rail__subhint">Orden oficial · Campos pág. ___</p>
+                <h3 class="annex-rail__heading">Índice del Informe Técnico</h3>
+                <p class="annex-rail__subhint">Síntesis ejecutiva · Anexos al final</p>
               </div>
-              <span class="annex-rail__count tabular-nums">12 apartados</span>
+              <span id="rail-section-count" class="annex-rail__count tabular-nums">18 puntos</span>
             </div>
             <ul id="annex-buttons-list" class="annex-rail__list">
               <!-- Generado dinámicamente desde app.js -->
@@ -618,8 +628,9 @@
       </div>
     </div>
 
-    <!-- Manifiesto de evidencias publicadas y script principal en JavaScript puro -->
-    <script src="./evidencias/manifest.js?v=20261123a" defer></script>
-    <script src="./app.js?v=20261123a" defer></script>
+    <!-- Manifiesto de evidencias publicadas, datos del Informe Técnico y script principal -->
+    <script src="./evidencias/manifest.js?v=20261124a" defer></script>
+    <script src="./report-data.js?v=20261124a" defer></script>
+    <script src="./app.js?v=20261124a" defer></script>
   </body>
 </html>

@@ -1376,7 +1376,13 @@ function initPortfolioApp() {
   const previewEmptyTitle = document.getElementById('preview-empty-title');
   const previewEmptyHint = document.getElementById('preview-empty-hint');
   const previewEmptySubtitles = document.getElementById('preview-empty-subtitles');
+  const previewEmptyFallback = document.getElementById('preview-empty-fallback');
+  const previewViewport = document.getElementById('preview-viewport');
   const previewContent = document.getElementById('preview-content');
+  const reportStageBody = document.getElementById('report-stage-body');
+  const annexSubnavBar = document.getElementById('annex-subnav-bar');
+  const railSectionCount = document.getElementById('rail-section-count');
+  const jumpToAnexosBtn = document.getElementById('jump-to-anexos-btn');
   const previewOpenTabLink = document.getElementById('preview-open-tab-link');
   const previewDownloadLink = document.getElementById('preview-download-link');
 
@@ -1404,9 +1410,17 @@ function initPortfolioApp() {
     savePersistedMap(window.localStorage, STORAGE_KEYS.publicUrls, publicUrlsMap);
   }
 
+  const REPORT_DATA = globalThis.ECHELE_REPORT_DATA || {
+    REPORT_SECTIONS: [],
+    ANNEX_FALLBACK_SUMMARIES: {},
+  };
+  const reportSections = Array.isArray(REPORT_DATA.REPORT_SECTIONS) ? REPORT_DATA.REPORT_SECTIONS : [];
+
   const state = {
     view: 'annexes',
     annexes: mergeAnnexesWithStorage(DEFAULT_ANNEXES, titlesMap, descriptionsMap),
+    activeReportSectionId: reportSections.length > 0 ? reportSections[0].id : 'anexos',
+    activeReportTabBySection: {},
     activeAnnexId: '1',
     drawerOpen: true,
     projectionMode: false,
@@ -1419,6 +1433,17 @@ function initPortfolioApp() {
     // Versión antigua en previsualización temporal
     viewingVersion: null,
   };
+
+  function isAnnexModeActive() {
+    return state.activeReportSectionId === 'anexos' || reportSections.length === 0;
+  }
+
+  function getActiveReportSection() {
+    return (
+      reportSections.find((s) => s.id === state.activeReportSectionId) ||
+      reportSections[0] || { id: 'anexos', isAnnexWorkspace: true }
+    );
+  }
 
   // Inicializar URLs públicas guardadas en localStorage
   Object.keys(publicUrlsMap).forEach((rawAnnexId) => {
@@ -1760,10 +1785,346 @@ function initPortfolioApp() {
   }
 
   /* ------------------------------------------------------------------------
-     Renderizado del índice lateral derecho (estructura fija 1–11 + Anexos)
+     Renderizado del índice lateral derecho (Informe Técnico + Anexos al final)
+     y subnavegación de Anexos 1–12
      ------------------------------------------------------------------------ */
+  function buildReportGalleryNode(galleryItems) {
+    const grid = document.createElement('div');
+    grid.className = 'report-gallery';
+    galleryItems.forEach((item) => {
+      const fig = document.createElement('figure');
+      fig.className = 'report-gallery__card';
+      const img = document.createElement('img');
+      img.className = 'report-gallery__img';
+      img.src = item.src;
+      img.alt = item.caption || 'Diagrama de evidencia';
+      img.loading = 'lazy';
+      const cap = document.createElement('figcaption');
+      cap.className = 'report-gallery__caption';
+      cap.textContent = item.caption || '';
+      fig.appendChild(img);
+      fig.appendChild(cap);
+      grid.appendChild(fig);
+    });
+    return grid;
+  }
+
+  function buildReportTablesNodes(tables) {
+    const frag = document.createDocumentFragment();
+    tables.forEach((tbl) => {
+      const block = document.createElement('div');
+      block.className = 'report-table-block';
+      if (tbl.title) {
+        const h = document.createElement('h4');
+        h.className = 'report-table-block__title';
+        h.textContent = tbl.title;
+        block.appendChild(h);
+      }
+      const wrap = document.createElement('div');
+      wrap.className = 'report-table-wrap';
+      const table = document.createElement('table');
+      table.className = 'report-table';
+      const thead = document.createElement('thead');
+      const hr = document.createElement('tr');
+      (tbl.headers || []).forEach((col) => {
+        const th = document.createElement('th');
+        th.textContent = col;
+        hr.appendChild(th);
+      });
+      thead.appendChild(hr);
+      table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      (tbl.rows || []).forEach((r) => {
+        const tr = document.createElement('tr');
+        r.forEach((cell) => {
+          const td = document.createElement('td');
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      wrap.appendChild(table);
+      block.appendChild(wrap);
+      frag.appendChild(block);
+    });
+    return frag;
+  }
+
+  function renderReportSectionBody() {
+    if (!reportStageBody) return;
+    const section = getActiveReportSection();
+    reportStageBody.innerHTML = '';
+
+    if (section.lead) {
+      const leadBox = document.createElement('div');
+      leadBox.className = 'report-lead-box';
+      const leadP = document.createElement('p');
+      leadP.className = 'report-lead-box__text';
+      leadP.textContent = section.lead;
+      leadBox.appendChild(leadP);
+      reportStageBody.appendChild(leadBox);
+    }
+
+    if (Array.isArray(section.kpis) && section.kpis.length > 0) {
+      const kpiGrid = document.createElement('div');
+      kpiGrid.className = 'report-kpi-grid';
+      section.kpis.forEach((kpi) => {
+        const card = document.createElement('div');
+        card.className = 'report-kpi-card';
+        const lbl = document.createElement('span');
+        lbl.className = 'report-kpi-card__label';
+        lbl.textContent = kpi.label;
+        const val = document.createElement('span');
+        val.className = 'report-kpi-card__value';
+        val.textContent = kpi.value;
+        card.appendChild(lbl);
+        card.appendChild(val);
+        kpiGrid.appendChild(card);
+      });
+      reportStageBody.appendChild(kpiGrid);
+    }
+
+    if (Array.isArray(section.cards) && section.cards.length > 0) {
+      const cardsGrid = document.createElement('div');
+      cardsGrid.className = 'report-cards-grid';
+      section.cards.forEach((c) => {
+        const card = document.createElement('article');
+        card.className = `report-card${c.highlight ? ' report-card--highlight' : ''}`;
+        if (c.title) {
+          const h = document.createElement('h4');
+          h.className = 'report-card__title';
+          h.textContent = c.title;
+          card.appendChild(h);
+        }
+        if (Array.isArray(c.bullets) && c.bullets.length > 0) {
+          const ul = document.createElement('ul');
+          ul.className = 'report-bullets';
+          c.bullets.forEach((b) => {
+            const li = document.createElement('li');
+            li.textContent = b;
+            ul.appendChild(li);
+          });
+          card.appendChild(ul);
+        }
+        cardsGrid.appendChild(card);
+      });
+      reportStageBody.appendChild(cardsGrid);
+    }
+
+    if (Array.isArray(section.interactiveTabs) && section.interactiveTabs.length > 0) {
+      const activeTabId = state.activeReportTabBySection[section.id] || section.interactiveTabs[0].id;
+      const activeTab =
+        section.interactiveTabs.find((t) => t.id === activeTabId) || section.interactiveTabs[0];
+
+      const tabsBar = document.createElement('div');
+      tabsBar.className = 'report-tabs';
+      tabsBar.setAttribute('role', 'tablist');
+      section.interactiveTabs.forEach((tab) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.role = 'tab';
+        const selected = tab.id === activeTab.id;
+        btn.className = `report-tab-btn${selected ? ' is-active' : ''}`;
+        btn.setAttribute('aria-selected', String(selected));
+        btn.textContent = tab.label;
+        btn.addEventListener('click', () => {
+          state.activeReportTabBySection[section.id] = tab.id;
+          renderReportSectionBody();
+        });
+        tabsBar.appendChild(btn);
+      });
+      reportStageBody.appendChild(tabsBar);
+
+      if (activeTab.description) {
+        const p = document.createElement('p');
+        p.className = 'report-tab-desc';
+        p.textContent = activeTab.description;
+        reportStageBody.appendChild(p);
+      }
+
+      if (Array.isArray(activeTab.links) && activeTab.links.length > 0) {
+        const linksRow = document.createElement('div');
+        linksRow.className = 'report-links-row';
+        activeTab.links.forEach((lnk) => {
+          const a = document.createElement('a');
+          a.className = 'btn-primary-cover';
+          a.href = lnk.url;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = lnk.label;
+          linksRow.appendChild(a);
+        });
+        reportStageBody.appendChild(linksRow);
+      }
+
+      if (Array.isArray(activeTab.bullets) && activeTab.bullets.length > 0) {
+        const card = document.createElement('article');
+        card.className = 'report-card';
+        const ul = document.createElement('ul');
+        ul.className = 'report-bullets';
+        activeTab.bullets.forEach((b) => {
+          const li = document.createElement('li');
+          li.textContent = b;
+          ul.appendChild(li);
+        });
+        card.appendChild(ul);
+        reportStageBody.appendChild(card);
+      }
+
+      if (Array.isArray(activeTab.groups) && activeTab.groups.length > 0) {
+        const mGrid = document.createElement('div');
+        mGrid.className = 'report-module-grid';
+        activeTab.groups.forEach((g) => {
+          const mCard = document.createElement('article');
+          mCard.className = 'report-module-card';
+          const h = document.createElement('h4');
+          h.className = 'report-module-card__title';
+          h.textContent = g.title;
+          const ul = document.createElement('ul');
+          ul.className = 'report-module-card__list';
+          (g.items || []).forEach((it) => {
+            const li = document.createElement('li');
+            li.textContent = it;
+            ul.appendChild(li);
+          });
+          mCard.appendChild(h);
+          mCard.appendChild(ul);
+          mGrid.appendChild(mCard);
+        });
+        reportStageBody.appendChild(mGrid);
+      }
+
+      if (Array.isArray(activeTab.tables) && activeTab.tables.length > 0) {
+        reportStageBody.appendChild(buildReportTablesNodes(activeTab.tables));
+      }
+
+      if (Array.isArray(activeTab.gallery) && activeTab.gallery.length > 0) {
+        reportStageBody.appendChild(buildReportGalleryNode(activeTab.gallery));
+      }
+    }
+
+    if (Array.isArray(section.tables) && section.tables.length > 0) {
+      reportStageBody.appendChild(buildReportTablesNodes(section.tables));
+    }
+
+    if (Array.isArray(section.gallery) && section.gallery.length > 0) {
+      reportStageBody.appendChild(buildReportGalleryNode(section.gallery));
+    }
+  }
+
+  function renderAnnexSubnav() {
+    if (!annexSubnavBar) return;
+    if (!isAnnexModeActive()) {
+      annexSubnavBar.hidden = true;
+      return;
+    }
+    annexSubnavBar.hidden = false;
+    annexSubnavBar.innerHTML = '';
+
+    state.annexes.forEach((annex) => {
+      const attached = state.sessionFiles.get(annex.id);
+      const hasFile = Boolean(attached && (attached.objectUrl || attached.publicUrl || attached.publishedPath));
+      const isActive = annex.id === state.activeAnnexId;
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `annex-subpill${isActive ? ' is-active' : ''}${hasFile ? ' has-file' : ''}`;
+      btn.setAttribute('aria-current', isActive ? 'true' : 'false');
+
+      const dot = document.createElement('span');
+      dot.className = 'annex-subpill__dot';
+
+      const label = document.createElement('span');
+      label.textContent = annex.title;
+
+      btn.appendChild(dot);
+      btn.appendChild(label);
+      btn.addEventListener('click', () => {
+        state.activeAnnexId = annex.id;
+        clearViewingVersion();
+        state.zoomPercent = 100;
+        clearError();
+        titleSaveStatus.textContent = '';
+        renderAll();
+      });
+
+      annexSubnavBar.appendChild(btn);
+    });
+  }
+
   function renderAnnexRail() {
     annexButtonsList.innerHTML = '';
+
+    if (reportSections.length > 0) {
+      if (railSectionCount) {
+        railSectionCount.textContent = `${reportSections.length} puntos`;
+      }
+      reportSections.forEach((sec) => {
+        const li = document.createElement('li');
+        li.className = 'annex-rail__item';
+
+        const btn = document.createElement('button');
+        const isActive = sec.id === state.activeReportSectionId;
+        const isAnx = Boolean(sec.isAnnexWorkspace);
+
+        btn.type = 'button';
+        btn.className = `annex-btn${isActive ? ' is-active' : ''}${isAnx ? ' is-annex-terminal' : ''}`;
+        btn.dataset.sectionId = sec.id;
+        btn.setAttribute('aria-current', isActive ? 'true' : 'false');
+
+        const topRow = document.createElement('span');
+        topRow.className = 'annex-btn__top';
+
+        const mainSpan = document.createElement('span');
+        mainSpan.className = 'annex-btn__main';
+
+        const codeSpan = document.createElement('span');
+        codeSpan.className = 'annex-btn__code';
+        codeSpan.textContent = isAnx ? 'Anx' : sec.code.replace('.', '');
+
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'annex-btn__label';
+        labelSpan.textContent = sec.shortLabel;
+
+        mainSpan.appendChild(codeSpan);
+        mainSpan.appendChild(labelSpan);
+
+        const rightSpan = document.createElement('span');
+        rightSpan.className = 'annex-btn__right';
+
+        const statusSpan = document.createElement('span');
+        statusSpan.className = 'annex-btn__status';
+        if (isAnx) {
+          const loadedCount = state.annexes.filter((a) => state.sessionFiles.has(a.id)).length;
+          statusSpan.textContent = `${loadedCount}/${state.annexes.length} arch.`;
+        } else {
+          statusSpan.textContent = sec.tag || 'Ver';
+        }
+        rightSpan.appendChild(statusSpan);
+
+        topRow.appendChild(mainSpan);
+        topRow.appendChild(rightSpan);
+        btn.appendChild(topRow);
+
+        btn.addEventListener('click', () => {
+          state.activeReportSectionId = sec.id;
+          clearError();
+          titleSaveStatus.textContent = '';
+          if (isAnx && !state.projectionMode) {
+            state.drawerOpen = true;
+            annexDrawer.classList.remove('is-collapsed');
+            toggleDrawerBtn.setAttribute('aria-expanded', 'true');
+            toggleDrawerLabel.textContent = 'Ocultar panel';
+          }
+          renderAll();
+        });
+
+        li.appendChild(btn);
+        annexButtonsList.appendChild(li);
+      });
+      return;
+    }
 
     state.annexes.forEach((annex) => {
       const li = document.createElement('li');
@@ -1965,6 +2326,24 @@ function initPortfolioApp() {
   }
 
   function renderPreviewHeaderMeta() {
+    if (!isAnnexModeActive()) {
+      const sec = getActiveReportSection();
+      if (previewAnnexCode) {
+        previewAnnexCode.textContent = `Informe Técnico · Punto ${sec.code.replace('.', '')}`;
+      }
+      if (previewPageBadge) {
+        previewPageBadge.textContent = sec.tag || 'Resumen';
+      }
+      if (previewHeading) {
+        previewHeading.textContent = sec.title;
+      }
+      if (previewSubtitlesList) {
+        previewSubtitlesList.innerHTML = '';
+        previewSubtitlesList.hidden = true;
+      }
+      return;
+    }
+
     const annex = getActiveAnnex();
     if (previewAnnexCode) {
       previewAnnexCode.textContent = annex.id === '12' ? 'Anexos' : `Apartado ${annex.code}`;
@@ -1991,13 +2370,31 @@ function initPortfolioApp() {
   }
 
   function renderPreview() {
+    renderPreviewHeaderMeta();
+
+    if (!isAnnexModeActive()) {
+      if (workspaceGrid) workspaceGrid.classList.add('is-report-view');
+      if (reportStageBody) reportStageBody.hidden = false;
+      if (previewViewport) previewViewport.hidden = true;
+      if (toggleDrawerBtn) toggleDrawerBtn.hidden = true;
+      if (zoomControls) zoomControls.hidden = true;
+      if (previewOpenTabLink) previewOpenTabLink.hidden = true;
+      if (previewDownloadLink) previewDownloadLink.hidden = true;
+      renderReportSectionBody();
+      return;
+    }
+
+    if (workspaceGrid) workspaceGrid.classList.remove('is-report-view');
+    if (reportStageBody) reportStageBody.hidden = true;
+    if (previewViewport) previewViewport.hidden = false;
+    if (toggleDrawerBtn) toggleDrawerBtn.hidden = false;
+
     const annex = getActiveAnnex();
     // Si se está viendo una versión anterior del histórico, se previsualiza esa en lugar de la actual
     const viewing =
       state.viewingVersion && state.viewingVersion.annexId === annex.id ? state.viewingVersion : null;
     const attached = viewing ? viewing.entry : state.sessionFiles.get(annex.id);
 
-    renderPreviewHeaderMeta();
     previewContent.innerHTML = '';
 
     const hasFileOrUrl = Boolean(attached && (attached.objectUrl || attached.publicUrl || attached.publishedPath));
@@ -2028,10 +2425,42 @@ function initPortfolioApp() {
           previewEmptySubtitles.hidden = true;
         }
       }
-      previewEmptyHint.textContent =
-        'Este apartado aún no tiene un documento cargado. Adjunta tu archivo Word (.docx), Excel (.xlsx), PowerPoint (.pptx), PDF o imagen para previsualizarlo en pantalla.';
+      const fallback = (REPORT_DATA.ANNEX_FALLBACK_SUMMARIES || {})[annex.id];
+      if (previewEmptyFallback) {
+        previewEmptyFallback.innerHTML = '';
+        if (fallback) {
+          previewEmptyFallback.hidden = false;
+          const h = document.createElement('h4');
+          h.className = 'annex-fallback-summary__title';
+          h.textContent = fallback.title;
+          previewEmptyFallback.appendChild(h);
+          if (Array.isArray(fallback.points)) {
+            const ul = document.createElement('ul');
+            ul.className = 'report-bullets';
+            fallback.points.forEach((pt) => {
+              const li = document.createElement('li');
+              li.textContent = pt;
+              ul.appendChild(li);
+            });
+            previewEmptyFallback.appendChild(ul);
+          }
+          if (Array.isArray(fallback.gallery)) {
+            previewEmptyFallback.appendChild(buildReportGalleryNode(fallback.gallery));
+          }
+          previewEmptyHint.textContent =
+            'Falta por subir el archivo definitivo de este anexo; mientras tanto se muestra la información resumida extraída de tus documentos entregados.';
+        } else {
+          previewEmptyFallback.hidden = true;
+          previewEmptyHint.textContent =
+            'Este apartado aún no tiene un documento cargado. Adjunta tu archivo Word (.docx), Excel (.xlsx), PowerPoint (.pptx), PDF o imagen para previsualizarlo en pantalla.';
+        }
+      } else {
+        previewEmptyHint.textContent =
+          'Este apartado aún no tiene un documento cargado. Adjunta tu archivo Word (.docx), Excel (.xlsx), PowerPoint (.pptx), PDF o imagen para previsualizarlo en pantalla.';
+      }
       return;
     }
+    if (previewEmptyFallback) previewEmptyFallback.hidden = true;
 
     // Si proviene del repositorio publicado (manifest.json) y aún no se ha descargado en memoria, obtenerlo ahora
     if (attached && attached.publishedPath && !attached.file && !viewing) {
@@ -2507,6 +2936,7 @@ function initPortfolioApp() {
     updateLoadedCounter();
     renderHeroVideo();
     renderAnnexRail();
+    renderAnnexSubnav();
     renderDrawer();
     renderPreview();
   }
@@ -2600,6 +3030,7 @@ function initPortfolioApp() {
     savePersistedMap(window.localStorage, STORAGE_KEYS.titles, titlesMap);
     titleSaveStatus.textContent = 'Nombre guardado en localStorage.';
     renderAnnexRail();
+    renderAnnexSubnav();
     previewHeading.textContent = annex.title;
   }
 
@@ -2677,13 +3108,37 @@ function initPortfolioApp() {
     });
   }
 
-  // Ampliación de imágenes al hacer clic (directas o incrustadas en Word/PowerPoint/Excel)
+  // Ampliación de imágenes al hacer clic (directas, incrustadas en Word/PowerPoint/Excel, o galería del Informe)
   previewContent.addEventListener('click', (e) => {
     const img = e.target.closest('img.preview-image, img.office-embedded-image');
     if (img && img.src) {
       openImageLightbox(img.src, img.alt || getActiveAnnex().title);
     }
   });
+  if (reportStageBody) {
+    reportStageBody.addEventListener('click', (e) => {
+      const img = e.target.closest('img.report-gallery__img');
+      if (img && img.src) {
+        openImageLightbox(img.src, img.alt || getActiveReportSection().title);
+      }
+    });
+  }
+  if (previewEmptyFallback) {
+    previewEmptyFallback.addEventListener('click', (e) => {
+      const img = e.target.closest('img.report-gallery__img');
+      if (img && img.src) {
+        openImageLightbox(img.src, img.alt || getActiveAnnex().title);
+      }
+    });
+  }
+  if (jumpToAnexosBtn) {
+    jumpToAnexosBtn.addEventListener('click', () => {
+      state.activeReportSectionId = 'anexos';
+      renderAll();
+      const target = document.getElementById('portfolio-workspace');
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  }
   if (lightboxZoomIn) {
     lightboxZoomIn.addEventListener('click', () => {
       state.lightboxZoomPercent = Math.min(300, state.lightboxZoomPercent + 25);
