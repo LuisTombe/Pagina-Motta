@@ -168,13 +168,13 @@ test('excel: colIndexToLetter genera referencias de columna correctas', () => {
   assert.equal(colIndexToLetter(27), 'AB');
 });
 
-test('ECHELE_REPORT_DATA: omite puntos sin respaldo (10 y 15), deja Anexos al final y todas sus imágenes existen', () => {
+test('ECHELE_REPORT_DATA: incluye secciones 10 (ISO 25010) y 15 (QA), deja Anexos al final y todas sus imágenes existen', () => {
   const { REPORT_SECTIONS, ANNEX_FALLBACK_SUMMARIES } = (globalThis as any).ECHELE_REPORT_DATA;
-  assert.ok(Array.isArray(REPORT_SECTIONS) && REPORT_SECTIONS.length >= 16);
+  assert.ok(Array.isArray(REPORT_SECTIONS) && REPORT_SECTIONS.length >= 18);
 
   const ids = REPORT_SECTIONS.map((s: any) => s.id);
-  assert.equal(ids.includes('sec-10'), false);
-  assert.equal(ids.includes('sec-15'), false);
+  assert.equal(ids.includes('sec-10'), true);
+  assert.equal(ids.includes('sec-15'), true);
 
   const last = REPORT_SECTIONS[REPORT_SECTIONS.length - 1];
   assert.equal(last.id, 'anexos');

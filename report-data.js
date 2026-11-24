@@ -451,6 +451,34 @@
       ],
     },
     {
+      id: 'sec-10',
+      code: '10.',
+      shortLabel: '10. Calidad ISO/IEC 25010',
+      title: '10. Evaluación frente a Normas de Calidad (ISO/IEC 25010)',
+      tag: 'Calidad Verificada',
+      lead:
+        'Evaluación técnica de los entregables (aplicativo web + API REST + portafolio documental) frente a las características de calidad de la norma ISO/IEC 25010 y la especificación IEEE 830 / ISO 29148.',
+      kpis: [
+        { label: 'Estándar evaluado', value: 'ISO/IEC 25010' },
+        { label: 'Seguridad credenciales', value: 'scrypt + HMAC-SHA256' },
+        { label: 'Alineación SRS §8', value: 'MVP sin escrow obligatorio' },
+        { label: 'Trazabilidad', value: '100% RF/RNF verificados' },
+      ],
+      tables: [
+        {
+          title: 'Matriz de Cumplimiento ISO/IEC 25010 — Échele Camello',
+          headers: ['Característica ISO 25010', 'Evidencia verificada en el proyecto', 'Estado'],
+          rows: [
+            ['Adecuación funcional', 'Catálogo, filtros, agenda sin cruces (RF-035..038), chat con imágenes (RF-042), reseñas (RF-047), reportes (RF-050) y CRUD categorías (RF-057).', 'Cumplido'],
+            ['Seguridad', 'Hashing scrypt con sal aleatoria única por usuario, tokens de sesión HMAC-SHA256 revocables (RF-061) y control RBAC estricto en backend (RF-006, RF-059).', 'Cumplido'],
+            ['Confiabilidad', 'Persistencia JSON atómica en runtime-data.json, máquina de estados con transiciones validadas y prevención de doble agendamiento (HTTP 409).', 'Cumplido'],
+            ['Usabilidad', 'Interfaz responsiva con retroalimentación no bloqueante (banners/toasts en lugar de window.alert), filtros claros y visor local de anexos.', 'Cumplido'],
+            ['Mantenibilidad y Portabilidad', 'Arquitectura modular (server/app.ts, server/security.ts, server/store.ts) con TypeScript estricto (0 errores) y build Vite reproducible.', 'Cumplido'],
+          ],
+        },
+      ],
+    },
+    {
       id: 'sec-11',
       code: '11.',
       shortLabel: '11. Arquitectura de Software',
@@ -719,6 +747,35 @@
                 ['1.8 – 1.9', 'Validación y consolidación documental', '4 h', 'Integración coherente de productos en el SRS.'],
               ],
             },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'sec-15',
+      code: '15.',
+      shortLabel: '15. Pruebas y QA',
+      title: '15. Pruebas, Verificación y Aseguramiento de la Calidad (QA)',
+      tag: 'Pruebas Automatizadas PASS',
+      lead:
+        'Resultados reales ejecutados sobre la suite del aplicativo web (API REST + seguridad + reglas SRS) y sobre la suite del portafolio técnico interactivo.',
+      kpis: [
+        { label: 'Pruebas API / SRS', value: '5 / 5 PASS (1.06 s)' },
+        { label: 'Pruebas Portafolio', value: '12 / 12 PASS' },
+        { label: 'TypeScript (tsc)', value: '0 errores' },
+        { label: 'Build Vite', value: '703 ms (exit 0)' },
+      ],
+      tables: [
+        {
+          title: 'Registro Real de Pruebas Ejecutadas (tests/srs_compliance.test.ts + app.test.ts)',
+          headers: ['Suite / Caso de Prueba', 'Cobertura SRS / Calidad', 'Resultado observado'],
+          rows: [
+            ['RNF-011 · Hashing scrypt', 'Verifica sal única aleatoria por contraseña y verificación timingSafeEqual.', 'PASS (134.9 ms)'],
+            ['RF-001..006 / RF-059 / RF-061', 'Registro, login, bloqueo de escalamiento a admin (HTTP 403) y revocación de sesión (HTTP 401).', 'PASS (183.5 ms)'],
+            ['RF-057 · CRUD Categorías Admin', 'Creación, actualización y eliminación de categorías restringida a rol admin.', 'PASS (144.3 ms)'],
+            ['SRS §8 & RF-035..038 · Agenda', 'Flujo directo sin escrow obligatorio (comisión 0 en MVP) y rechazo de cruce horario (HTTP 409).', 'PASS (151.0 ms)'],
+            ['RF-042 / RF-047 / RF-050 · Chat, Reseñas y Reportes', 'Validación de formato PNG/JPG/WEBP en chat, reseña única solo en contrato completado y reportes.', 'PASS (147.2 ms)'],
+            ['app.test.ts (Portafolio)', 'Integridad de 12 anexos en manifest.json, parser OOXML/Excel, historial de versiones y rutas de imágenes.', '12 / 12 PASS'],
           ],
         },
       ],
